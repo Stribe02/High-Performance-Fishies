@@ -237,11 +237,11 @@ MonoBehaviour:
   m_GameObject: {fileID: 1624573203}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 153d7f5a631d7e14bbc7ad6e88e62f12, type: 3}
+  m_Script: {fileID: 11500000, guid: cdd673563c330e04fab7ded751859c82, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  boidPrefab: {fileID: 5578838254241686288, guid: 9d6bf3424d9e5b24aaaf476fa9bb0d44, type: 3}
-  flockSize: 900
+  boidPrefab: {fileID: 2146448434044857237, guid: 48b37e4135af507419679dc125e082eb, type: 3}
+  flockSize: 50
   allBoids: []
   cohesionWeight: 1
   separationWeight: 1
@@ -372,17 +372,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 474bcb49853aa07438625e644c072ee6, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  m_Version: 3
-  m_UsePipelineSettings: 1
-  m_AdditionalLightsShadowResolutionTier: 2
-  m_LightLayerMask: 1
-  m_RenderingLayers: 1
-  m_CustomShadowLayers: 0
-  m_ShadowLayerMask: 1
-  m_ShadowRenderingLayers: 1
-  m_LightCookieSize: {x: 1, y: 1}
-  m_LightCookieOffset: {x: 0, y: 0}
-  m_SoftShadowQuality: 0
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0
