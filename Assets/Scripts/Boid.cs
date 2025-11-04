@@ -81,4 +81,46 @@ public class Boid : MonoBehaviour
 
         return Vector3.zero;
     }
+    
+    // Rule 4: Keep being on screen/ camera you little shits
+    // We need a method to find the bounds of the screen and then call it in the other method.
+
+    public Vector3 BoundBoidsToScreen(Boid boid)
+    {
+        Camera camera = Camera.main;
+        
+        Vector3 screenBounds = camera.ScreenToWorldPoint(new Vector3(Screen.width, Screen.height, camera.fieldOfView));// Converts the center of the screen to World Units
+         
+        Vector3 vector = new Vector3(0,0,0); // vector to be returned
+        //Viewport space is normalized and relative to the camera. The bottom-left of the viewport is (0,0); the top-right is (1,1). The z position is in world units from the camera.
+
+        // boid.x is < xmin -> set vector.x to 10 or similar
+        // if boid.x is > xmax -> vector.x to -10 or similar 
+        if (boid.transform.position.x < -screenBounds.x)
+        {
+            vector.x = 10;
+        } else if (boid.transform.position.x > screenBounds.x)
+        {
+            vector.x = -10;
+        }
+
+          // if boid.y < ymin -> set vector.
+        if (boid.transform.position.y < -screenBounds.y)
+        {
+            vector.y = 10;
+        } else if (boid.transform.position.y > screenBounds.y)
+        {
+            vector.y = -10;
+        }
+
+        if (boid.transform.position.z < -2.0f)
+        {
+            vector.z = 10;
+        } else if (boid.transform.position.z < camera.fieldOfView)
+        {
+            vector.z = -5;
+        }
+
+        return vector;
+    }
 }
