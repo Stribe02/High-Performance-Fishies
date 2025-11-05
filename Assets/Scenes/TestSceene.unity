@@ -119,6 +119,67 @@ NavMeshSettings:
     debug:
       m_Flags: 0
   m_NavMeshData: {fileID: 0}
+--- !u!1001 &342064751
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    serializedVersion: 3
+    m_TransformParent: {fileID: 0}
+    m_Modifications:
+    - target: {fileID: 2083812152406697177, guid: edf79a58c93e3734d809791c20b7e51e, type: 3}
+      propertyPath: manager
+      value: 
+      objectReference: {fileID: 1624573203}
+    - target: {fileID: 2821247890043015534, guid: edf79a58c93e3734d809791c20b7e51e, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: -9.7
+      objectReference: {fileID: 0}
+    - target: {fileID: 2821247890043015534, guid: edf79a58c93e3734d809791c20b7e51e, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2821247890043015534, guid: edf79a58c93e3734d809791c20b7e51e, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 41.3
+      objectReference: {fileID: 0}
+    - target: {fileID: 2821247890043015534, guid: edf79a58c93e3734d809791c20b7e51e, type: 3}
+      propertyPath: m_LocalRotation.w
+      value: -0.057776377
+      objectReference: {fileID: 0}
+    - target: {fileID: 2821247890043015534, guid: edf79a58c93e3734d809791c20b7e51e, type: 3}
+      propertyPath: m_LocalRotation.x
+      value: -0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2821247890043015534, guid: edf79a58c93e3734d809791c20b7e51e, type: 3}
+      propertyPath: m_LocalRotation.y
+      value: 0.9983296
+      objectReference: {fileID: 0}
+    - target: {fileID: 2821247890043015534, guid: edf79a58c93e3734d809791c20b7e51e, type: 3}
+      propertyPath: m_LocalRotation.z
+      value: -0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2821247890043015534, guid: edf79a58c93e3734d809791c20b7e51e, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2821247890043015534, guid: edf79a58c93e3734d809791c20b7e51e, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 186.624
+      objectReference: {fileID: 0}
+    - target: {fileID: 2821247890043015534, guid: edf79a58c93e3734d809791c20b7e51e, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3710875070982527954, guid: edf79a58c93e3734d809791c20b7e51e, type: 3}
+      propertyPath: m_Name
+      value: Shark
+      objectReference: {fileID: 0}
+    m_RemovedComponents: []
+    m_RemovedGameObjects: []
+    m_AddedGameObjects: []
+    m_AddedComponents: []
+  m_SourcePrefab: {fileID: 100100000, guid: edf79a58c93e3734d809791c20b7e51e, type: 3}
 --- !u!1 &1304222603
 GameObject:
   m_ObjectHideFlags: 0
@@ -240,8 +301,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: cdd673563c330e04fab7ded751859c82, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  boidPrefab: {fileID: 2146448434044857237, guid: 48b37e4135af507419679dc125e082eb, type: 3}
-  flockSize: 50
+  boidPrefab: {fileID: 8856548824803852618, guid: 9b3846a1ccb17f94aa6642b1e6e70848, type: 3}
+  flockSize: 100
   allBoids: []
   cohesionWeight: 1
   separationWeight: 1
@@ -379,3 +440,4 @@ SceneRoots:
   - {fileID: 1304222606}
   - {fileID: 2141611457}
   - {fileID: 1624573205}
+  - {fileID: 342064751}
