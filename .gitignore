@@ -613,3 +613,4 @@ FodyWeavers.xsd
 *.msix
 *.msm
 *.msp
+/.vsconfig
