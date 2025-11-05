@@ -68,8 +68,9 @@ public class FlockingManager : MonoBehaviour
                 Vector3 cohesion = boid.Cohesion(school) * cWeight;
                 Vector3 seperation = boid.Separation(school, defaultSeparationRadius) * sWeight;
                 Vector3 alignment = boid.Alignment(school) * aWeight;
+                Vector3 keepInBounds = boid.BoundBoidsToScreen(boid);
 
-                boid.velocity += cohesion + seperation + alignment;
+                boid.velocity += cohesion + seperation + alignment + keepInBounds;
                 boid.velocity = Vector3.ClampMagnitude(boid.velocity, boid.maxSpeed);
                 boid.transform.position += boid.velocity * Time.deltaTime;
                 boid.transform.rotation = Quaternion.LookRotation(boid.velocity);
