@@ -614,3 +614,5 @@ FodyWeavers.xsd
 *.msm
 *.msp
 /.vsconfig
+/Assets/Profiler Snapshots
+/ProfileAnalyzer
