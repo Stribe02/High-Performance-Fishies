@@ -1,21 +1,23 @@
 using System;
+using System.Collections.Generic;
 using UnityEngine;
 
 public class Boid : MonoBehaviour
 {
     public Vector3 velocity;
     public float maxSpeed = 5f;
+    public int schoolIndex;
     
     // more vars to come
 
     // Rule 1: Stick together
     // we normalise to ensure each behavior contributes equally to the final movement of the flock
-    public Vector3 Cohesion(Boid[] neighbors)
+    public Vector3 Cohesion(List<Boid> school)
     {
         Vector3 centerOfMass = Vector3.zero;
         int count = 0;
 
-        foreach (Boid neighbor in neighbors)
+        foreach (Boid neighbor in school)
         {
             if (neighbor != this)
             {
@@ -34,12 +36,12 @@ public class Boid : MonoBehaviour
     }
 
     // Rule 2 
-    public Vector3 Separation(Boid[] neighbors, float separationRadius)
+    public Vector3 Separation(List<Boid> school, float separationRadius)
     {
         Vector3 moveAway = Vector3.zero;
         int count = 0;
 
-        foreach (Boid neighbor in neighbors)
+        foreach (Boid neighbor in school)
         {
             if (neighbor != this &&
                 Vector3.Distance(transform.position, neighbor.transform.position) < separationRadius)
@@ -59,12 +61,12 @@ public class Boid : MonoBehaviour
     }
     
     // Rule 3 
-    public Vector3 Alignment(Boid[] neighbors)
+    public Vector3 Alignment(List<Boid> school)
     {
         Vector3 averageVelocity = Vector3.zero;
         int count = 0;
 
-        foreach (Boid neighbor in neighbors)
+        foreach (Boid neighbor in school)
         {
             if (neighbor != this)
             {

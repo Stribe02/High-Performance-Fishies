@@ -1,59 +1,107 @@
 using System.Collections.Generic;
-using NUnit.Framework;
 using UnityEngine;
 
 public class FlockingManager : MonoBehaviour
 {
     public GameObject boidPrefab; //fish
     public int flockSize = 50;
+    public int schools = 5;
     public Boid[] allBoids;
-    public float cohesionWeight = 1f;
-    public float separationWeight = 1f;
-    public float alignmentWeight = 1f;
-    public float separationRadius = 2f;
+    public List<List<Boid>> allSchools = new List<List<Boid>>();
+    public float defaultCohesionWeight = 1f;
+    public float defaultSeparationWeight = 1f;
+    public float defaultAlignmentWeight = 1f;
+    public float defaultSeparationRadius = 2f;
+
+    public List<float> cohesionWeights = new List<float>();
+    public List<float> separationWeights = new List<float>();
+    public List<float> alignmentWeights = new List<float>();
 
     private void Start()
     {
-        allBoids = new Boid[flockSize];
-        for (int i = 0; i < flockSize; i++)
+        //allBoids = new Boid[flockSize];
+        for (int s = 0; s < schools; s++)
         {
-            //Vector3 randomPosition = Random.insideUnitSphere * 10;
-            //Viewport space is normalized and relative to the camera. The bottom-left of the viewport is (0,0); the top-right is (1,1). The z position is in world units from the camera.
-            // so spawning location needs to a bit outside of this. at least one of the coords needs to be higher than 1 or below 0.
-            float randomSide = Random.value;
-            float sideCoord = 0f;
-            if (randomSide > 0.5)
-            {
-                sideCoord = 1.3f;
-            }
-            else sideCoord = -0.3f;
+            List<Boid> school = new List<Boid>();
 
-            Vector3 randomPosition = Camera.main.ViewportToWorldPoint(new Vector3(sideCoord, 1, Camera.main.nearClipPlane));
-            GameObject newBoid = Instantiate(boidPrefab, randomPosition, Quaternion.identity);
-            allBoids[i] = newBoid.GetComponent<Boid>();
-            allBoids[i].velocity = Random.insideUnitSphere.normalized * allBoids[i].maxSpeed;
+            //per school weights
+            cohesionWeights.Add(defaultCohesionWeight);
+            separationWeights.Add(defaultSeparationWeight);
+            alignmentWeights.Add(defaultAlignmentWeight);
+
+            //gib random color to schools
+            Color schoolColor = Random.ColorHSV(0f, 1f, 1f, 1f, 0.5f, 1f);
+
+            for (int i = 0; i < flockSize; i++)
+            {
+                Vector3 randomPosition = Random.insideUnitSphere * 10;
+                GameObject newBoidGO = Instantiate(boidPrefab, randomPosition, Quaternion.identity);
+                Boid newBoid = newBoidGO.GetComponent<Boid>();
+                newBoid.velocity = Random.insideUnitSphere.normalized * newBoid.maxSpeed;
+                newBoid.schoolIndex = s;
+
+                Renderer[] rends = newBoidGO.GetComponentsInChildren<Renderer>();
+                foreach (Renderer rend in rends)
+                {
+                    rend.material = new Material(rend.material);
+                    rend.material.color = schoolColor;
+                }
+
+                school.Add(newBoid);
+            }
+
+            allSchools.Add(school);
         }
     }
 
     private void Update()
     {
-        foreach (Boid boid in allBoids)
+        for (int s = 0; s < allSchools.Count; s++)
         {
-            // Find them neighbors
-            Boid[] neighbors = FindNeighbors(boid, 5f);
+            List<Boid> school = allSchools[s];
+            float cWeight = cohesionWeights[s];
+            float sWeight = separationWeights[s];
+            float aWeight = alignmentWeights[s];
 
-            Vector3 cohesion = boid.Cohesion(neighbors) * cohesionWeight;
-            Vector3 seperation = boid.Separation(neighbors, separationRadius) * separationWeight;
-            Vector3 alignment = boid.Alignment(neighbors) * alignmentWeight;
-            Vector3 keepInBounds = boid.BoundBoidsToScreen(boid);
+            foreach(Boid boid in school)
+            {
+                Vector3 cohesion = boid.Cohesion(school) * cWeight;
+                Vector3 seperation = boid.Separation(school, defaultSeparationRadius) * sWeight;
+                Vector3 alignment = boid.Alignment(school) * aWeight;
+                Vector3 keepInBounds = boid.BoundBoidsToScreen(boid);
 
-            boid.velocity += cohesion + seperation + alignment+ keepInBounds;
-            boid.velocity = Vector3.ClampMagnitude(boid.velocity, boid.maxSpeed);
-            boid.transform.position += boid.velocity * Time.deltaTime;
-            boid.transform.rotation = Quaternion.LookRotation(boid.velocity);
+                boid.velocity += cohesion + seperation + alignment + keepInBounds;
+                boid.velocity = Vector3.ClampMagnitude(boid.velocity, boid.maxSpeed);
+                boid.transform.position += boid.velocity * Time.deltaTime;
+                boid.transform.rotation = Quaternion.LookRotation(boid.velocity);
+            }
         }
     }
 
+    //utility for weight changes
+    public void ResetSchoolWeights(int schoolIndex)
+    {
+        if (schoolIndex >= 0 && schoolIndex < allSchools.Count)
+        {
+            cohesionWeights[schoolIndex] = defaultCohesionWeight;
+            separationWeights[schoolIndex] = defaultSeparationWeight;
+            alignmentWeights[schoolIndex] = defaultAlignmentWeight;
+
+        }
+    }
+
+    public void SetSchoolWeights(int schoolIndex, float c, float s, float a)
+    {
+        if (schoolIndex >= 0 && schoolIndex < allSchools.Count)
+        {
+            cohesionWeights[schoolIndex] = c;
+            separationWeights[schoolIndex] = s;
+            alignmentWeights[schoolIndex] = a;
+        }
+    }
+
+
+    // OLD
     Boid[] FindNeighbors(Boid boid, float radius)
     {
         List<Boid> neighbors = new List<Boid>();
