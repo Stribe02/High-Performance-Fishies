@@ -91,26 +91,28 @@ public class Boid : MonoBehaviour
     {
         Camera camera = Camera.main;
         
-        Vector3 screenBounds = camera.ScreenToWorldPoint(new Vector3(Screen.width, Screen.height, camera.fieldOfView));// Converts the center of the screen to World Units
+        Vector3 screenBounds = camera.ScreenToWorldPoint(new Vector3(Screen.width, Screen.height, camera.farClipPlane));// Converts the center of the screen to World Units
+        Vector3 topRight = camera.ViewportToWorldPoint(new Vector3(1, 1, camera.fieldOfView));
+        Vector3 bottomLeft = camera.ViewportToWorldPoint(new Vector3(0, 0, camera.fieldOfView));
          
         Vector3 vector = new Vector3(0,0,0); // vector to be returned
         //Viewport space is normalized and relative to the camera. The bottom-left of the viewport is (0,0); the top-right is (1,1). The z position is in world units from the camera.
 
         // boid.x is < xmin -> set vector.x to 10 or similar
         // if boid.x is > xmax -> vector.x to -10 or similar 
-        if (boid.transform.position.x < -screenBounds.x)
+        if (boid.transform.position.x < bottomLeft.x)
         {
             vector.x = 10;
-        } else if (boid.transform.position.x > screenBounds.x)
+        } else if (boid.transform.position.x > topRight.x)
         {
             vector.x = -10;
         }
 
           // if boid.y < ymin -> set vector.
-        if (boid.transform.position.y < -screenBounds.y)
+        if (boid.transform.position.y < bottomLeft.y)
         {
             vector.y = 10;
-        } else if (boid.transform.position.y > screenBounds.y)
+        } else if (boid.transform.position.y > topRight.y)
         {
             vector.y = -10;
         }
@@ -118,7 +120,7 @@ public class Boid : MonoBehaviour
         if (boid.transform.position.z < -2.0f)
         {
             vector.z = 10;
-        } else if (boid.transform.position.z < camera.fieldOfView)
+        } else if (boid.transform.position.z > topRight.z)
         {
             vector.z = -5;
         }
