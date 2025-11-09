@@ -1,14 +1,14 @@
 using Unity.Entities;
 using UnityEngine;
 
-class SmallFishBaker : MonoBehaviour
+class SmallFishAuthoring : MonoBehaviour
 {
     public GameObject smallFishPrefab;
 }
 
-class FishBakerBaker : Baker<SmallFishBaker>
+class FishBakerBaker : Baker<SmallFishAuthoring>
 {
-    public override void Bake(SmallFishBaker authoring)
+    public override void Bake(SmallFishAuthoring authoring)
     {
         var entity = GetEntity(authoring, TransformUsageFlags.None);
         var fishPrefab = new SmallFishSpawner
