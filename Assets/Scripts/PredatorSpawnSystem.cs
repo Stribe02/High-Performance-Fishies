@@ -3,6 +3,8 @@ using Unity.Collections;
 using Unity.Entities;
 using Unity.Mathematics;
 using Unity.Transforms;
+using UnityEngine;
+using static UnityEngine.EventSystems.EventTrigger;
 
 partial struct PredatorSpawnSystem : ISystem
 {
@@ -17,17 +19,18 @@ partial struct PredatorSpawnSystem : ISystem
     {
         state.Enabled = false;
 
+        //var ecb = new EntityCommandBuffer(state.WorldUpdateAllocator);
+        var ecb = SystemAPI.GetSingleton<BeginSimulationEntityCommandBufferSystem.Singleton>().CreateCommandBuffer(state.WorldUnmanaged);
+
         var shark = SystemAPI.GetSingleton<PredatorShark>();
-        var instances = state.EntityManager.Instantiate(shark.Prefab, 1, Allocator.Temp);
+        var sharkEntity = state.EntityManager.Instantiate(shark.Prefab);
 
-        var random = new Random(123);
-        foreach (var entity in instances)
-        {
-            var transform = SystemAPI.GetComponentRW<LocalTransform>(entity);
-            transform.ValueRW.Position = random.NextFloat3(new float3(10, 10, 10));
-        }
+        var transform = SystemAPI.GetComponentRW<LocalTransform>(sharkEntity);
+        transform.ValueRW.Position = new float3(0,0,0);
 
-
+        ecb.AddComponent<PredatorTag>(sharkEntity);
+        ecb.AddComponent<AquaticAnimalAttributes>(sharkEntity);
+        //ecb.Playback(state.EntityManager);
     }
 
 
