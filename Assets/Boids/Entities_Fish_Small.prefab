@@ -355,10 +355,11 @@ GameObject:
   - component: {fileID: 4308008286617111413}
   - component: {fileID: 3447829664486297185}
   - component: {fileID: 6457147672563688401}
-  - component: {fileID: 3549856680457845841}
-  - component: {fileID: 5811685246661487858}
+  - component: {fileID: 3431212511185170399}
+  - component: {fileID: -6673786192796410877}
+  - component: {fileID: 3756531867534843501}
   m_Layer: 0
-  m_Name: Fish_Small
+  m_Name: Entities_Fish_Small
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -421,7 +422,7 @@ MonoBehaviour:
   velocity: {x: 0, y: 0, z: 0}
   maxSpeed: 5
   schoolIndex: 0
---- !u!114 &3549856680457845841
+--- !u!114 &3431212511185170399
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -433,7 +434,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 31f3161ee9eafe04486972df1f9a9b9d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
---- !u!114 &5811685246661487858
+--- !u!114 &-6673786192796410877
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -445,8 +446,23 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0e2483b06dcbd194aa1d308e798cca2d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  speed: 0
+  speed: 2
   radius: 0
+  velocity: {x: 0, y: 0, z: 0}
+--- !u!114 &3756531867534843501
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5578838254241686288}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 856b8325c0b39c942b76317d1ed39fa7, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  velocity: {x: 0, y: 0, z: 0}
+  schoolIndex: 0
 --- !u!1 &7653625703169699816
 GameObject:
   m_ObjectHideFlags: 0

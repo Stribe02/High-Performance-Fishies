@@ -5,6 +5,7 @@ class AquaticAnimalAttributesAuthoring : MonoBehaviour
 {
     public float speed;
     public float radius;
+    public Vector3 velocity;
 }
 
 class Baker : Baker<AquaticAnimalAttributesAuthoring>

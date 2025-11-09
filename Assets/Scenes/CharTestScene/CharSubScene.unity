@@ -145,7 +145,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 386577403}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 1d576bfa05b97d049b8fdc497c618d65, type: 3}
+  m_Script: {fileID: 11500000, guid: 1b71ba4948c3aec4795df0d4da02c065, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   smallFishPrefab: {fileID: 5578838254241686288, guid: 9d6bf3424d9e5b24aaaf476fa9bb0d44, type: 3}

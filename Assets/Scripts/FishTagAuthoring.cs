@@ -6,15 +6,15 @@ class FishTagAuthoring : MonoBehaviour
     
 }
 
-class FishTagBakerBaker : Baker<FishTagAuthoring>
+class FishTagBaker : Baker<FishTagAuthoring>
 {
     public override void Bake(FishTagAuthoring authoring)
     {
         var entity = GetEntity(TransformUsageFlags.Dynamic);
         AddComponent<FishTag>(entity);
     }
+}
 
-    public struct FishTag : IComponentData
+public struct FishTag : IComponentData
     {
     }
-}
