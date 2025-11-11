@@ -12,6 +12,7 @@ class FishSchoolAttributeAuthoring : MonoBehaviour
     public float separationWeight = 1f;
     public float alignmentWeight = 1f;
     public float separationRadius = 2f;
+    public List<float> cohesionWeights;
 }
 
 class FishSchoolAuthoringBaker : Baker<FishSchoolAttributeAuthoring>
@@ -19,6 +20,7 @@ class FishSchoolAuthoringBaker : Baker<FishSchoolAttributeAuthoring>
     public override void Bake(FishSchoolAttributeAuthoring authoring)
     {
         var entity = GetEntity(authoring, TransformUsageFlags.None); // school itself doesn't need to move, but the fishes do
+        var bufferTest = AddBuffer<FloatBufferElement>(entity);
         var fishSchool = new FishSchoolAttribute
         { 
            FishPrefab = GetEntity(authoring.fishPrefab, TransformUsageFlags.Dynamic),
@@ -42,4 +44,10 @@ public struct FishSchoolAttribute : IComponentData
     public float AlignmentWeight;
     public float SeparationRadius;
     public int FlockSize;
+    //public DynamicBuffer<FloatBufferElement> CohesionWeights;
+}
+[InternalBufferCapacity(20)]
+public struct FloatBufferElement : IBufferElementData
+{
+    public float Value;
 }

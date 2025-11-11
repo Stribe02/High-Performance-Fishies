@@ -150,12 +150,12 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   fishPrefab: {fileID: 5578838254241686288, guid: 468b9a70640fb7d4d8e0f90f5ea8aa50, type: 3}
   schoolIndex: 2
-  defaultCohesionWeight: 1
-  defaultSeparationWeight: 1
-  defaultAlignmentWeight: 1
-  defaultSeparationRadius: 1
   flockSize: 2
-  color: {r: 0, g: 0, b: 0, a: 0}
+  cohesionWeight: 1
+  separationWeight: 1
+  alignmentWeight: 1
+  separationRadius: 2
+  cohesionWeights: []
 --- !u!4 &2070894172
 Transform:
   m_ObjectHideFlags: 0

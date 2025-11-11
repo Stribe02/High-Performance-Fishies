@@ -63,6 +63,20 @@ partial struct FishSchoolSpawner : ISystem
                 }
             }
         }
+
+        foreach (var (fishSchoolAttribute, fishSchool) in SystemAPI.Query<RefRW<FishSchoolAttribute>>()
+                     .WithEntityAccess())
+        {
+            var dynamicBuffer = ecb.AddBuffer<FloatBufferElement>(fishSchool);
+            for (int i = 0; i < fishSchoolAttribute.ValueRO.SchoolIndex; i++)
+            {
+                Debug.Log("Adding to buffer: " + i);
+                dynamicBuffer.Add(new FloatBufferElement
+                {
+                    Value = fishSchoolAttribute.ValueRO.AlignmentWeight
+                });
+            }
+        }
     }
     // Return a random color that is visually distinct.
     // (Naive randomness would produce a distribution of colors clustered 

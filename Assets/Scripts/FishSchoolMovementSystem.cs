@@ -19,9 +19,10 @@ public void OnCreate(ref SystemState state)
                      .WithEntityAccess())
         {
             var fishSchoolIndex = fishSchoolAttribute.ValueRO.SchoolIndex;
+            var dynamicBuffer = state.EntityManager.GetBuffer<FloatBufferElement>(fishSchool);
             for (int i = 0; i < fishSchoolIndex; i++)
             {
-                float cohesionWeight = fishSchoolAttribute.ValueRO.CohesionWeight;
+                float cohesionWeight = dynamicBuffer[i].Value;
                 float seperationWeight = fishSchoolAttribute.ValueRO.SeparationWeight;
                 float alignmentWeight = fishSchoolAttribute.ValueRO.AlignmentWeight;
 
