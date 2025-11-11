@@ -6,7 +6,7 @@ using Unity.Transforms;
 
 partial struct SmallFishSpawnerSystem : ISystem
 {
-
+/*
     public void OnCreate(ref SystemState state)
     {
         state.RequireForUpdate<FishAttributes>();
@@ -39,5 +39,5 @@ partial struct SmallFishSpawnerSystem : ISystem
     public void OnDestroy(ref SystemState state)
     {
         
-    }
+    }*/
 }

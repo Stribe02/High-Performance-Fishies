@@ -1,30 +1,30 @@
-using System.Numerics;
-using Unity.Burst;
 using Unity.Entities;
 using Unity.Mathematics;
 using Unity.Transforms;
-using Vector3 = UnityEngine.Vector3;
 using UnityEngine;
 
-
-partial struct FishBoidsSystem : ISystem
-{/*
-    public void OnCreate(ref SystemState state)
+partial struct FishSchoolMovementSystem : ISystem
+{
+public void OnCreate(ref SystemState state)
     {
         state.RequireForUpdate<FishAttributes>();
         state.RequireForUpdate<AquaticAnimalAttributes>();
+        state.RequireForUpdate<FishSchoolAttribute>();
     }
     
     public void OnUpdate(ref SystemState state)
     {
+        // should loop through the different school the cohesion etc. methods needs to loop through the fish of the school they get
+        
         foreach (var (transform, fishAttributes, aquaticAnimalAttri ,entity) in
                  SystemAPI.Query<RefRW<LocalTransform>, RefRW<FishAttributes>, RefRW<AquaticAnimalAttributes>>()
                      .WithEntityAccess())
-        {
+        { // maybe a check for shared schoolIndex
             
             Vector3 cohesion = Cohesion(ref state, entity, transform.ValueRW.Position);
             Vector3 separation = Separation(ref state, entity, transform.ValueRW.Position, 2f) * 1f;
             Vector3 alignment = Alignment(ref state, entity, transform.ValueRW.Position) * 1f;
+            
             fishAttributes.ValueRW.Velocity += cohesion + separation + alignment;
             fishAttributes.ValueRW.Velocity = Vector3.ClampMagnitude(fishAttributes.ValueRW.Velocity, aquaticAnimalAttri.ValueRW.Speed);
             float3 velocity = fishAttributes.ValueRW.Velocity;
@@ -68,7 +68,7 @@ partial struct FishBoidsSystem : ISystem
         int seperationCount = 0;
         foreach (var (transform, entity) in
                  SystemAPI.Query<RefRW<LocalTransform>>()
-                     .WithAll<FishTag>() // Get all with fish tag
+                     .WithAll<FishSchoolAttribute>() // Get all with fish tag
                      .WithEntityAccess())
         {
             if (!entity.Equals(fishEntity) &&
@@ -113,5 +113,5 @@ partial struct FishBoidsSystem : ISystem
             }
             return Vector3.zero;
         }
-*/
+
 }
