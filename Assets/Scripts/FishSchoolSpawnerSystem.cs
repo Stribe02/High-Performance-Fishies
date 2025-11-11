@@ -33,7 +33,7 @@ partial struct FishSchoolSpawner : ISystem
             // URPMaterialPropertyBaseColor is a component from the Entities.Graphics package 
             // that lets us set the rendered base color of a rendered entity.
             var color = new URPMaterialPropertyBaseColor { Value = RandomColor(ref random) };
-
+            
             // spawn fishes based on the flocksize
             var fishes =
                 state.EntityManager.Instantiate(fishSchoolTest.FishPrefab, fishSchoolTest.FlockSize, Allocator.Temp);

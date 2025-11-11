@@ -1,3 +1,5 @@
+using System.Collections.Generic;
+using Unity.Collections;
 using Unity.Entities;
 using UnityEngine;
 
@@ -5,12 +7,11 @@ class FishSchoolAttributeAuthoring : MonoBehaviour
 {
     public GameObject fishPrefab;
     public int schoolIndex;
-    public float defaultCohesionWeight;
-    public float defaultSeparationWeight;
-    public float defaultAlignmentWeight;
-    public float defaultSeparationRadius;
     public int flockSize;
-    public Color color;
+    public float cohesionWeight = 1f;
+    public float separationWeight = 1f;
+    public float alignmentWeight = 1f;
+    public float separationRadius = 2f;
 }
 
 class FishSchoolAuthoringBaker : Baker<FishSchoolAttributeAuthoring>
@@ -22,12 +23,11 @@ class FishSchoolAuthoringBaker : Baker<FishSchoolAttributeAuthoring>
         { 
            FishPrefab = GetEntity(authoring.fishPrefab, TransformUsageFlags.Dynamic),
            SchoolIndex = authoring.schoolIndex,
-           DefaultCohesionWeight = authoring.defaultCohesionWeight,
-           DefaultSeparationWeight = authoring.defaultSeparationWeight,
-           DefaultAlignmentWeight = authoring.defaultAlignmentWeight,
-           DefaultSeparationRadius = authoring.defaultSeparationRadius,
+           CohesionWeight = authoring.cohesionWeight,
+           SeparationWeight = authoring.separationWeight,
+           AlignmentWeight = authoring.alignmentWeight,
+           SeparationRadius = authoring.separationRadius,
            FlockSize = authoring.flockSize,
-           FishColor = authoring.color,
         };
         AddComponent(entity, fishSchool);
     }
@@ -37,10 +37,9 @@ public struct FishSchoolAttribute : IComponentData
 {
     public Entity FishPrefab;
     public int SchoolIndex;
-    public float DefaultCohesionWeight;
-    public float DefaultSeparationWeight;
-    public float DefaultAlignmentWeight;
-    public float DefaultSeparationRadius;
+    public float CohesionWeight;
+    public float SeparationWeight;
+    public float AlignmentWeight;
+    public float SeparationRadius;
     public int FlockSize;
-    public Color FishColor;
 }

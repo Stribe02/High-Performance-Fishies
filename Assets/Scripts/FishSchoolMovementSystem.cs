@@ -15,21 +15,35 @@ public void OnCreate(ref SystemState state)
     public void OnUpdate(ref SystemState state)
     {
         // should loop through the different school the cohesion etc. methods needs to loop through the fish of the school they get
-        
-        foreach (var (transform, fishAttributes, aquaticAnimalAttri ,entity) in
-                 SystemAPI.Query<RefRW<LocalTransform>, RefRW<FishAttributes>, RefRW<AquaticAnimalAttributes>>()
+        foreach (var (fishSchoolAttribute, fishSchool) in SystemAPI.Query<RefRW<FishSchoolAttribute>>()
                      .WithEntityAccess())
-        { // maybe a check for shared schoolIndex
-            
-            Vector3 cohesion = Cohesion(ref state, entity, transform.ValueRW.Position);
-            Vector3 separation = Separation(ref state, entity, transform.ValueRW.Position, 2f) * 1f;
-            Vector3 alignment = Alignment(ref state, entity, transform.ValueRW.Position) * 1f;
-            
-            fishAttributes.ValueRW.Velocity += cohesion + separation + alignment;
-            fishAttributes.ValueRW.Velocity = Vector3.ClampMagnitude(fishAttributes.ValueRW.Velocity, aquaticAnimalAttri.ValueRW.Speed);
-            float3 velocity = fishAttributes.ValueRW.Velocity;
-            transform.ValueRW.Position += velocity * SystemAPI.Time.DeltaTime;
-            transform.ValueRW.Rotation = UnityEngine.Quaternion.LookRotation(fishAttributes.ValueRW.Velocity);
+        {
+            var fishSchoolIndex = fishSchoolAttribute.ValueRO.SchoolIndex;
+            for (int i = 0; i < fishSchoolIndex; i++)
+            {
+                float cohesionWeight = fishSchoolAttribute.ValueRO.CohesionWeight;
+                float seperationWeight = fishSchoolAttribute.ValueRO.SeparationWeight;
+                float alignmentWeight = fishSchoolAttribute.ValueRO.AlignmentWeight;
+
+                foreach (var (transform, fishAttributes, aquaticAnimalAttri, entity) in
+                         SystemAPI.Query<RefRW<LocalTransform>, RefRW<FishAttributes>, RefRW<AquaticAnimalAttributes>>()
+                             .WithEntityAccess())
+                {
+                    // maybe a check for shared schoolIndex
+                    if (i != fishAttributes.ValueRO.SchoolIndex) continue;
+                    Vector3 cohesion = Cohesion(ref state, entity, transform.ValueRW.Position) * cohesionWeight;
+                    Vector3 separation = Separation(ref state, entity, transform.ValueRW.Position, fishSchoolAttribute.ValueRO.SeparationRadius) * seperationWeight;
+                    Vector3 alignment = Alignment(ref state, entity, transform.ValueRW.Position) * alignmentWeight;
+
+                    fishAttributes.ValueRW.Velocity += cohesion + separation + alignment;
+                    fishAttributes.ValueRW.Velocity = Vector3.ClampMagnitude(fishAttributes.ValueRW.Velocity,
+                        aquaticAnimalAttri.ValueRW.Speed);
+                    float3 velocity = fishAttributes.ValueRW.Velocity;
+                    transform.ValueRW.Position += velocity * SystemAPI.Time.DeltaTime;
+                    transform.ValueRW.Rotation =
+                        UnityEngine.Quaternion.LookRotation(fishAttributes.ValueRW.Velocity);
+                }
+            }
         }
     }
 
@@ -113,5 +127,4 @@ public void OnCreate(ref SystemState state)
             }
             return Vector3.zero;
         }
-
 }
