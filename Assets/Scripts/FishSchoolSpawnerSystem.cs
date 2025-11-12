@@ -53,7 +53,7 @@ partial struct FishSchoolSpawner : ISystem
             var color = new URPMaterialPropertyBaseColor { Value = RandomColor(ref random) };
 
             var fishes =
-                state.EntityManager.Instantiate(fishSchoolData.FishPrefab, fishSchoolData.FlockSize, Allocator.Temp);
+                state.EntityManager.Instantiate(fishSchoolData.FishPrefab, fishSchoolData.FlockSize, Allocator.Persistent);
 
             foreach (var fish in fishes)
             {
@@ -62,8 +62,12 @@ partial struct FishSchoolSpawner : ISystem
                 ecb.AddComponent<FishAttributes>(fish);
                 transform.ValueRW.Position = random.NextFloat3(new float3(10, 10, 10)); // setting the random location
                 ecb.AddComponent<AquaticAnimalAttributes>(fish);
-                SystemAPI.GetComponentRW<AquaticAnimalAttributes>(fish).ValueRW.Speed =
-                    2f; // making sure the speed is set
+                var speed = SystemAPI.GetComponentRW<AquaticAnimalAttributes>(fish).ValueRW.Speed =
+                    2f;
+                SystemAPI.GetComponentRW<FishAttributes>(fish).ValueRW.Velocity =
+                    UnityEngine.Random.insideUnitSphere.normalized * speed;
+
+                SystemAPI.GetComponentRW<FishAttributes>(fish).ValueRW.SchoolIndex = i;
                 // Every root entity instantiated from a prefab has a LinkedEntityGroup component, which
                 // is a list of all the entities that make up the prefab hierarchy (including the root).
 
@@ -81,6 +85,8 @@ partial struct FishSchoolSpawner : ISystem
                     }
                 }
             }
+
+            SystemAPI.GetComponentRW<FishSchoolAttribute>(fishSchoolEntity).ValueRW.Fishes = fishes;
         }
     }
     /*   var fishPrefab = SystemAPI.GetSingleton<FishSchoolAttribute>().FishPrefab;
