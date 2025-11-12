@@ -119,7 +119,7 @@ NavMeshSettings:
     debug:
       m_Flags: 0
   m_NavMeshData: {fileID: 0}
---- !u!1 &2070894170
+--- !u!1 &1153302
 GameObject:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -127,42 +127,43 @@ GameObject:
   m_PrefabAsset: {fileID: 0}
   serializedVersion: 6
   m_Component:
-  - component: {fileID: 2070894172}
-  - component: {fileID: 2070894171}
+  - component: {fileID: 1153304}
+  - component: {fileID: 1153303}
   m_Layer: 0
-  m_Name: FishSchoolSpawner
+  m_Name: Config
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!114 &2070894171
+--- !u!114 &1153303
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2070894170}
+  m_GameObject: {fileID: 1153302}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 256b168869a2ed243a001fa6dda558bd, type: 3}
+  m_Script: {fileID: 11500000, guid: 8e7e039384f67ae43a5ec11aae591e88, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  fishPrefab: {fileID: 5578838254241686288, guid: 468b9a70640fb7d4d8e0f90f5ea8aa50, type: 3}
-  schoolIndex: 2
-  flockSize: 2
-  cohesionWeight: 1
-  separationWeight: 1
-  alignmentWeight: 1
-  separationRadius: 2
-  cohesionWeights: []
---- !u!4 &2070894172
+  smallFish: {fileID: 5578838254241686288, guid: 0421fc53bd7065e44b426f9eac65f296, type: 3}
+  tallFish: {fileID: 8856548824803852618, guid: 3237a6a3b342de1489ee999208c802f5, type: 3}
+  longFish: {fileID: 2146448434044857237, guid: bbb716bea1508dc4abb070868db7878c, type: 3}
+  numberOfSchools: 2
+  flockSize: 5
+  defaultCohesionWeight: 1
+  defaultSeparationWeight: 1
+  defaultAlignmentWeight: 1
+  defaultSeparationRadius: 2
+--- !u!4 &1153304
 Transform:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2070894170}
+  m_GameObject: {fileID: 1153302}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
@@ -175,4 +176,4 @@ Transform:
 SceneRoots:
   m_ObjectHideFlags: 0
   m_Roots:
-  - {fileID: 2070894172}
+  - {fileID: 1153304}

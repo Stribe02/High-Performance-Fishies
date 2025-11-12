@@ -5,7 +5,6 @@ using UnityEngine;
 
 class FishSchoolAttributeAuthoring : MonoBehaviour
 {
-    public GameObject fishPrefab;
     public int schoolIndex;
     public int flockSize;
     public float cohesionWeight = 1f;
@@ -13,6 +12,9 @@ class FishSchoolAttributeAuthoring : MonoBehaviour
     public float alignmentWeight = 1f;
     public float separationRadius = 2f;
     public List<float> cohesionWeights;
+    public GameObject fishPrefab;
+    public GameObject SchoolObject;
+
 }
 
 class FishSchoolAuthoringBaker : Baker<FishSchoolAttributeAuthoring>
@@ -20,34 +22,30 @@ class FishSchoolAuthoringBaker : Baker<FishSchoolAttributeAuthoring>
     public override void Bake(FishSchoolAttributeAuthoring authoring)
     {
         var entity = GetEntity(authoring, TransformUsageFlags.None); // school itself doesn't need to move, but the fishes do
-        var bufferTest = AddBuffer<FloatBufferElement>(entity);
         var fishSchool = new FishSchoolAttribute
         { 
-           FishPrefab = GetEntity(authoring.fishPrefab, TransformUsageFlags.Dynamic),
            SchoolIndex = authoring.schoolIndex,
            CohesionWeight = authoring.cohesionWeight,
            SeparationWeight = authoring.separationWeight,
            AlignmentWeight = authoring.alignmentWeight,
            SeparationRadius = authoring.separationRadius,
            FlockSize = authoring.flockSize,
+           FishPrefab = GetEntity(authoring.fishPrefab, TransformUsageFlags.Dynamic),
+           SchoolEntity = GetEntity(authoring.SchoolObject, TransformUsageFlags.None)
         };
         AddComponent(entity, fishSchool);
     }
 }
-
+[ChunkSerializable] 
 public struct FishSchoolAttribute : IComponentData
 {
-    public Entity FishPrefab;
     public int SchoolIndex;
     public float CohesionWeight;
     public float SeparationWeight;
     public float AlignmentWeight;
     public float SeparationRadius;
+    public NativeArray<Entity> Fishes;
     public int FlockSize;
-    //public DynamicBuffer<FloatBufferElement> CohesionWeights;
-}
-[InternalBufferCapacity(20)]
-public struct FloatBufferElement : IBufferElementData
-{
-    public float Value;
+    public Entity FishPrefab;
+    public Entity SchoolEntity;
 }

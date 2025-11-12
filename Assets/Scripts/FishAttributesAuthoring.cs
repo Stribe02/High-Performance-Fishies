@@ -16,7 +16,6 @@ class FishBaker : Baker<FishAttributesAuthoring>
         {
             Velocity = authoring.velocity,
             SchoolIndex = authoring.schoolIndex,
-            
         };
         AddComponent(entity, fishPrefab);
     }

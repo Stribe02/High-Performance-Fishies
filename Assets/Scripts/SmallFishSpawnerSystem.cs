@@ -5,8 +5,8 @@ using Unity.Mathematics;
 using Unity.Transforms;
 
 partial struct SmallFishSpawnerSystem : ISystem
-{
-/*
+{/*
+
     public void OnCreate(ref SystemState state)
     {
         state.RequireForUpdate<FishAttributes>();
