@@ -44,7 +44,7 @@ partial struct FishSchoolMovementSystem : ISystem
                     aquaData.Speed);
                 fishPosition += fishData.Velocity * SystemAPI.Time.DeltaTime;
                 fishRotation = UnityEngine.Quaternion.LookRotation(fishData.Velocity);
-                Debug.Log("FishPosition " + fishPosition);
+                //Debug.Log("FishPosition " + fishPosition);
                 ecb.SetComponent<FishAttributes>(fish, new FishAttributes
                 {
                     Velocity = fishData.Velocity,
