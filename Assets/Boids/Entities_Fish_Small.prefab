@@ -11,6 +11,7 @@ GameObject:
   - component: {fileID: 3983225844679182262}
   - component: {fileID: 966357479492620280}
   - component: {fileID: 9110617642644585909}
+  - component: {fileID: 9003519543427027385}
   m_Layer: 0
   m_Name: Tailfin
   m_TagString: Untagged
@@ -86,6 +87,19 @@ MeshRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 0
   m_AdditionalVertexStreams: {fileID: 0}
+--- !u!114 &9003519543427027385
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 127802372020695903}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 54b6467bcd530cd4d809fae70ea0ca9d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  color: {r: 0, g: 0, b: 0, a: 0}
 --- !u!1 &742977556960043119
 GameObject:
   m_ObjectHideFlags: 0
@@ -97,6 +111,7 @@ GameObject:
   - component: {fileID: 6055890469217728263}
   - component: {fileID: 3381416670707255969}
   - component: {fileID: 7304098111397544043}
+  - component: {fileID: 7037452435722738149}
   m_Layer: 0
   m_Name: Fin
   m_TagString: Untagged
@@ -172,6 +187,19 @@ MeshRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 0
   m_AdditionalVertexStreams: {fileID: 0}
+--- !u!114 &7037452435722738149
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 742977556960043119}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 54b6467bcd530cd4d809fae70ea0ca9d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  color: {r: 0, g: 0, b: 0, a: 0}
 --- !u!1 &1161741391723103123
 GameObject:
   m_ObjectHideFlags: 0
@@ -183,6 +211,7 @@ GameObject:
   - component: {fileID: 993481717340415924}
   - component: {fileID: 6823884479432967193}
   - component: {fileID: 5881062334547517576}
+  - component: {fileID: 2189012026611415558}
   m_Layer: 0
   m_Name: Body
   m_TagString: Untagged
@@ -258,6 +287,19 @@ MeshRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 0
   m_AdditionalVertexStreams: {fileID: 0}
+--- !u!114 &2189012026611415558
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1161741391723103123}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 54b6467bcd530cd4d809fae70ea0ca9d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  color: {r: 0, g: 0, b: 0, a: 0}
 --- !u!1 &4634323711016956631
 GameObject:
   m_ObjectHideFlags: 0
@@ -269,6 +311,7 @@ GameObject:
   - component: {fileID: 2312899071094313025}
   - component: {fileID: 3323066828287671282}
   - component: {fileID: 6954245119550115614}
+  - component: {fileID: 3746279710921092892}
   m_Layer: 0
   m_Name: Tailfin
   m_TagString: Untagged
@@ -344,6 +387,19 @@ MeshRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 0
   m_AdditionalVertexStreams: {fileID: 0}
+--- !u!114 &3746279710921092892
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4634323711016956631}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 54b6467bcd530cd4d809fae70ea0ca9d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  color: {r: 0, g: 0, b: 0, a: 0}
 --- !u!1 &5578838254241686288
 GameObject:
   m_ObjectHideFlags: 0
@@ -355,10 +411,12 @@ GameObject:
   - component: {fileID: 4308008286617111413}
   - component: {fileID: 3447829664486297185}
   - component: {fileID: 6457147672563688401}
-  - component: {fileID: 3549856680457845841}
-  - component: {fileID: 5811685246661487858}
+  - component: {fileID: 3431212511185170399}
+  - component: {fileID: -6673786192796410877}
+  - component: {fileID: 9212257770947596628}
+  - component: {fileID: 4954185095287464648}
   m_Layer: 0
-  m_Name: Fish_Small
+  m_Name: Entities_Fish_Small
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -421,7 +479,7 @@ MonoBehaviour:
   velocity: {x: 0, y: 0, z: 0}
   maxSpeed: 5
   schoolIndex: 0
---- !u!114 &3549856680457845841
+--- !u!114 &3431212511185170399
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -430,23 +488,52 @@ MonoBehaviour:
   m_GameObject: {fileID: 5578838254241686288}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 31f3161ee9eafe04486972df1f9a9b9d, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
---- !u!114 &5811685246661487858
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 5578838254241686288}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 0e2483b06dcbd194aa1d308e798cca2d, type: 3}
+  m_Script: {fileID: 11500000, guid: c9ef74901005b6043a8be0526a91e440, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   speed: 0
   radius: 0
+  velocity: {x: 0, y: 0, z: 0}
+--- !u!114 &-6673786192796410877
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5578838254241686288}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2381b578e4648bf4e8942f28a5eba069, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  fishPrefab: {fileID: 5578838254241686288}
+  velocity: {x: 0, y: 0, z: 0}
+  schoolIndex: 0
+--- !u!114 &9212257770947596628
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5578838254241686288}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c2f33bb6f5f618c44b052727774a35a2, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+--- !u!114 &4954185095287464648
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5578838254241686288}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 54b6467bcd530cd4d809fae70ea0ca9d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  color: {r: 0, g: 0, b: 0, a: 0}
 --- !u!1 &7653625703169699816
 GameObject:
   m_ObjectHideFlags: 0
@@ -458,6 +545,7 @@ GameObject:
   - component: {fileID: 2583545896565711609}
   - component: {fileID: 5941270307315782036}
   - component: {fileID: 3550508825123040332}
+  - component: {fileID: 2997864343573998494}
   m_Layer: 0
   m_Name: Head
   m_TagString: Untagged
@@ -533,6 +621,19 @@ MeshRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 0
   m_AdditionalVertexStreams: {fileID: 0}
+--- !u!114 &2997864343573998494
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7653625703169699816}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 54b6467bcd530cd4d809fae70ea0ca9d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  color: {r: 0, g: 0, b: 0, a: 0}
 --- !u!1 &8685032739145102578
 GameObject:
   m_ObjectHideFlags: 0
@@ -544,6 +645,7 @@ GameObject:
   - component: {fileID: 1322763046826714752}
   - component: {fileID: 6566309548458827276}
   - component: {fileID: 5807678066001871451}
+  - component: {fileID: 2493856623573474387}
   m_Layer: 0
   m_Name: Tailfin
   m_TagString: Untagged
@@ -619,3 +721,16 @@ MeshRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 0
   m_AdditionalVertexStreams: {fileID: 0}
+--- !u!114 &2493856623573474387
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8685032739145102578}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 54b6467bcd530cd4d809fae70ea0ca9d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  color: {r: 0, g: 0, b: 0, a: 0}
