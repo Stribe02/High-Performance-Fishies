@@ -26,7 +26,7 @@ partial struct PredatorSpawnSystem : ISystem
         var sharkEntity = state.EntityManager.Instantiate(shark.Prefab);
 
         var transform = SystemAPI.GetComponentRW<LocalTransform>(sharkEntity);
-        transform.ValueRW.Position = new float3(0,0,0);
+        transform.ValueRW.Position = new float3(0,-10,-10);
 
         ecb.AddComponent<PredatorTag>(sharkEntity);
         ecb.AddComponent<AquaticAnimalAttributes>(sharkEntity);

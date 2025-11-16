@@ -127,6 +127,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: 1900235420754923254, guid: edf79a58c93e3734d809791c20b7e51e, type: 3}
+      propertyPath: m_IsKinematic
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 2083812152406697177, guid: edf79a58c93e3734d809791c20b7e51e, type: 3}
       propertyPath: manager
       value: 
@@ -174,6 +178,10 @@ PrefabInstance:
     - target: {fileID: 3710875070982527954, guid: edf79a58c93e3734d809791c20b7e51e, type: 3}
       propertyPath: m_Name
       value: Shark
+      objectReference: {fileID: 0}
+    - target: {fileID: 7550555986453386009, guid: edf79a58c93e3734d809791c20b7e51e, type: 3}
+      propertyPath: m_ProvidesContacts
+      value: 1
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -303,11 +311,15 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   boidPrefab: {fileID: 8856548824803852618, guid: 9b3846a1ccb17f94aa6642b1e6e70848, type: 3}
   flockSize: 100
+  schools: 5
   allBoids: []
-  cohesionWeight: 1
-  separationWeight: 1
-  alignmentWeight: 1
-  separationRadius: 2
+  defaultCohesionWeight: 1
+  defaultSeparationWeight: 1
+  defaultAlignmentWeight: 1
+  defaultSeparationRadius: 2
+  cohesionWeights: []
+  separationWeights: []
+  alignmentWeights: []
 --- !u!4 &1624573205
 Transform:
   m_ObjectHideFlags: 0
@@ -433,6 +445,17 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 474bcb49853aa07438625e644c072ee6, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  m_Version: 3
+  m_UsePipelineSettings: 1
+  m_AdditionalLightsShadowResolutionTier: 2
+  m_LightLayerMask: 1
+  m_RenderingLayers: 1
+  m_CustomShadowLayers: 0
+  m_ShadowLayerMask: 1
+  m_ShadowRenderingLayers: 1
+  m_LightCookieSize: {x: 1, y: 1}
+  m_LightCookieOffset: {x: 0, y: 0}
+  m_SoftShadowQuality: 0
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0

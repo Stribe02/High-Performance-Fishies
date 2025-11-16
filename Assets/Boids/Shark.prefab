@@ -356,6 +356,7 @@ GameObject:
   - component: {fileID: 7550555986453386009}
   - component: {fileID: 2083812152406697177}
   - component: {fileID: 1900235420754923254}
+  - component: {fileID: 8031487774773829768}
   m_Layer: 0
   m_Name: Shark
   m_TagString: Untagged
@@ -417,10 +418,10 @@ MonoBehaviour:
   m_GameObject: {fileID: 3710875070982527954}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 8d8aab85a08234c44b955ac56f2ae920, type: 3}
+  m_Script: {fileID: 11500000, guid: 82222cd53d5fff74588f0aa8d3c55051, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  manager: {fileID: 0}
+  manager: {fileID: 8679848624145500782, guid: e4dd14cfc27f1744fb55097deaa48e18, type: 3}
   moveSpeed: 15
   targetPosition: {x: 0, y: 0, z: 0}
 --- !u!54 &1900235420754923254
@@ -446,10 +447,31 @@ Rigidbody:
   m_ImplicitCom: 1
   m_ImplicitTensor: 1
   m_UseGravity: 0
-  m_IsKinematic: 0
+  m_IsKinematic: 1
   m_Interpolate: 0
   m_Constraints: 0
   m_CollisionDetection: 0
+--- !u!65 &8031487774773829768
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3710875070982527954}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 7, y: 5.415171, z: 13}
+  m_Center: {x: -0.8, y: 0.25, z: 0}
 --- !u!1 &3911144011445781543
 GameObject:
   m_ObjectHideFlags: 0
