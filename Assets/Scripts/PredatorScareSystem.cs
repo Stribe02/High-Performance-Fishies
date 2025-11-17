@@ -25,6 +25,7 @@ partial struct PredatorScareSystem : ISystem
     float prevSeparationWeight;
     float prevAlignmentWeight;
     float prevSeparationRadius;
+    bool fishGotScared;
 
     //[BurstCompile]
     public void OnCreate(ref SystemState state)
@@ -50,7 +51,7 @@ partial struct PredatorScareSystem : ISystem
         foreach (var (transform, shark) in SystemAPI.Query<RefRW<LocalTransform>>().WithAll<PredatorTag>().WithEntityAccess())
         {
             hitSchools = PointDistanceCheck(state.EntityManager.GetComponentData<LocalTransform>(shark).Position, 2f, ref state);
-            Debug.Log(hitSchools.Count);
+            //Debug.Log(hitSchools.Count);
 
             if (hitSchools.Any())
             {
@@ -70,8 +71,9 @@ partial struct PredatorScareSystem : ISystem
                         SchoolEntity = schooldata.SchoolEntity
                     });
                 }
+                fishGotScared = true;
             }
-            else
+            else if (fishGotScared)
             {
                 foreach (var (fishSchoolAtt, fishSchoolEnt) in SystemAPI.Query<RefRW<FishSchoolAttribute>>().WithEntityAccess())
                 {
@@ -89,6 +91,7 @@ partial struct PredatorScareSystem : ISystem
                         SchoolEntity = schooldata.SchoolEntity
                     });
                 }
+                fishGotScared = false;
             }
         }
     }

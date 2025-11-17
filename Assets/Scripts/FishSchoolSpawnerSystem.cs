@@ -60,7 +60,8 @@ partial struct FishSchoolSpawner : ISystem
 
                 var transform = SystemAPI.GetComponentRW<LocalTransform>(fish);
                 ecb.AddComponent<FishAttributes>(fish);
-                transform.ValueRW.Position = random.NextFloat3(new float3(10, 10, 10)); // setting the random location
+                //transform.ValueRW.Position = random.NextFloat3(new float3(10, 10, 10)); // setting the random location
+                transform.ValueRW.Position = UnityEngine.Random.insideUnitSphere * 10;
                 ecb.AddComponent<AquaticAnimalAttributes>(fish);
                 var speed = SystemAPI.GetComponentRW<AquaticAnimalAttributes>(fish).ValueRW.Speed =
                     2f;
