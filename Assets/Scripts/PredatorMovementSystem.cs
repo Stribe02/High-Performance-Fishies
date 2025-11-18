@@ -6,15 +6,10 @@ using Unity.Transforms;
 //currently only used for random.range, should be replaced when optimizing
 using UnityEngine;
 
+[CreateAfter(typeof(PredatorSpawnSystem))]
 partial struct PredatorMovementSystem : ISystem
 {
     Vector3 targetPos;
-
-    [BurstCompile]
-    public void OnCreate(ref SystemState state)
-    {
-        state.RequireForUpdate<PredatorTag>();
-    }
 
     [BurstCompile]
     public void OnUpdate(ref SystemState state)
