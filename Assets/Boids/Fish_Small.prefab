@@ -355,6 +355,7 @@ GameObject:
   - component: {fileID: 4308008286617111413}
   - component: {fileID: 3447829664486297185}
   - component: {fileID: 4804941482455974158}
+  - component: {fileID: -7099053550811419923}
   m_Layer: 0
   m_Name: Fish_Small
   m_TagString: Untagged
@@ -419,6 +420,33 @@ MonoBehaviour:
   velocity: {x: 0, y: 0, z: 0}
   maxSpeed: 5
   schoolIndex: 0
+--- !u!54 &-7099053550811419923
+Rigidbody:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5578838254241686288}
+  serializedVersion: 5
+  m_Mass: 2
+  m_LinearDamping: 1
+  m_AngularDamping: 0.05
+  m_CenterOfMass: {x: 0, y: 0, z: 0}
+  m_InertiaTensor: {x: 1, y: 1, z: 1}
+  m_InertiaRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ImplicitCom: 1
+  m_ImplicitTensor: 1
+  m_UseGravity: 0
+  m_IsKinematic: 0
+  m_Interpolate: 0
+  m_Constraints: 0
+  m_CollisionDetection: 0
 --- !u!1 &7653625703169699816
 GameObject:
   m_ObjectHideFlags: 0

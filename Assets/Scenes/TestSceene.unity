@@ -128,6 +128,10 @@ PrefabInstance:
     m_TransformParent: {fileID: 0}
     m_Modifications:
     - target: {fileID: 1900235420754923254, guid: edf79a58c93e3734d809791c20b7e51e, type: 3}
+      propertyPath: m_Mass
+      value: 5
+      objectReference: {fileID: 0}
+    - target: {fileID: 1900235420754923254, guid: edf79a58c93e3734d809791c20b7e51e, type: 3}
       propertyPath: m_IsKinematic
       value: 1
       objectReference: {fileID: 0}
@@ -311,7 +315,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   boidPrefab: {fileID: 8856548824803852618, guid: 9b3846a1ccb17f94aa6642b1e6e70848, type: 3}
   flockSize: 100
-  schools: 5
+  schools: 3
   allBoids: []
   defaultCohesionWeight: 1
   defaultSeparationWeight: 1
