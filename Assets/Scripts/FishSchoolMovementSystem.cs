@@ -1,3 +1,4 @@
+using Unity.Burst;
 using Unity.Collections;
 using Unity.Entities;
 using Unity.Mathematics;
@@ -6,6 +7,7 @@ using UnityEngine;
 
 partial struct FishSchoolMovementSystem : ISystem
 {
+    [BurstCompile]
     public void OnCreate(ref SystemState state)
     {
         state.RequireForUpdate<BeginSimulationEntityCommandBufferSystem.Singleton
@@ -13,6 +15,7 @@ partial struct FishSchoolMovementSystem : ISystem
         //state.RequireForUpdate<FishAttributes>();
     }
 
+    [BurstCompile]
     public void OnUpdate(ref SystemState state)
     {
         var ecb =
@@ -44,7 +47,6 @@ partial struct FishSchoolMovementSystem : ISystem
                     aquaData.Speed);
                 fishPosition += fishData.Velocity * SystemAPI.Time.DeltaTime;
                 fishRotation = UnityEngine.Quaternion.LookRotation(fishData.Velocity);
-                //Debug.Log("FishPosition " + fishPosition);
                 ecb.SetComponent<FishAttributes>(fish, new FishAttributes
                 {
                     Velocity = fishData.Velocity,
@@ -61,6 +63,7 @@ partial struct FishSchoolMovementSystem : ISystem
     }
 
     // Rule 1:
+    [BurstCompile]
     public Vector3 Cohesion(ref SystemState state, Entity fishEntity,  NativeArray<Entity> schoolFishes, Vector3 fishEntityTransform, int schoolIndex)
     {
         // Rule 1: Cohesion
@@ -89,6 +92,7 @@ partial struct FishSchoolMovementSystem : ISystem
     }
 
     // Rule 2:
+    [BurstCompile]
     public Vector3 Separation(ref SystemState state, Entity fishEntity, NativeArray<Entity> schoolFishes,
         Vector3 fishEntityTransform, int schoolIndex, float seperationRadius)
     {
@@ -120,7 +124,9 @@ partial struct FishSchoolMovementSystem : ISystem
 
     }
 
+    
     // Rule 3
+    [BurstCompile]
     public Vector3 Alignment(ref SystemState state, Entity fishEntity, NativeArray<Entity> fishSchool,
         Vector3 fishEntityTransform, int schoolIndex)
     {
