@@ -36,7 +36,7 @@ partial struct FishSchoolMovementSystem : ISystem
 
             foreach (var fish in schoolBuffer)
             {
-                Vector3 fishPosition = state.EntityManager.GetComponentData<LocalTransform>(fish).Position;
+                Vector3 fishPosition = state.EntityManager.GetComponentData<LocalTransform>(fish.Fish).Position;
             /*
             *                Vector3 fishPosition = state.EntityManager.GetComponentData<LocalTransform>(fish.Fish).Position;
                 Vector3 cohesion = Cohesion(ref state, fish.Fish, schoolBuffer, fishPosition, fishSchoolAttribute.ValueRO.SchoolIndex) *
@@ -53,7 +53,7 @@ partial struct FishSchoolMovementSystem : ISystem
             NativeArray<int> cohesionCount = new NativeArray<int>(1, Allocator.TempJob);
             CohesionJob cohesionJob = new CohesionJob
             {
-                fishEntity = fish,
+                fishEntity = fish.Fish,
                 centerOfMass = centerOfMass,
                 cohesionCount = cohesionCount,
                 schoolIndex = fishSchoolAttribute.ValueRO.SchoolIndex
@@ -68,7 +68,7 @@ partial struct FishSchoolMovementSystem : ISystem
 
             SeparationJob separationJob = new SeparationJob
             {
-                fishEntity = fish,
+                fishEntity = fish.Fish,
                 fishEntityTransform = fishPosition,
                 moveAway = moveAway,
                 seperationCount = seperationCount,
@@ -135,30 +135,27 @@ partial struct FishSchoolMovementSystem : ISystem
         }
     }
 
+
     // Rule 1:
     [BurstCompile]
     public Vector3 Cohesion(ref SystemState state, Entity fishEntity, DynamicBuffer<SchoolFishes> schoolFishes, Vector3 fishEntityTransform, int schoolIndex)
     {
         // Rule 1: Cohesion
-        Vector3 centerOfMass = Vector3.zero;
+        Vector3 centerOfMass = Vector3.zero; // need to be float3???
         int cohesionCount = 0;
-
-        foreach (var (fishAttributes, localTransform, fish) in SystemAPI
-                     .Query<RefRW<FishAttributes>, RefRW<LocalTransform>>()
-                     .WithEntityAccess())
+        foreach (var fish in schoolFishes)
         {
             var fishData = state.EntityManager.GetComponentData<FishAttributes>(fish.Fish);
             var fishTransform = state.EntityManager.GetComponentData<LocalTransform>(fish.Fish);
                     
             if (!fish.Fish.Equals(fishEntity) && fishData.SchoolIndex == schoolIndex)
             {
-                var pos = new Vector3(localTransform.ValueRO.Position.x, localTransform.ValueRO.Position.y,
-                    localTransform.ValueRO.Position.z);
+                var pos = new Vector3(fishTransform.Position.x, fishTransform.Position.y,
+                    fishTransform.Position.z);
                 centerOfMass += pos;
                 cohesionCount++;
             }
         }
-
         if (cohesionCount > 0)
         {
             centerOfMass /= cohesionCount;
@@ -167,6 +164,8 @@ partial struct FishSchoolMovementSystem : ISystem
 
         return Vector3.zero;
     }
+    
+    
     [BurstCompile]
     public partial struct CohesionJob : IJobEntity
     {
@@ -227,9 +226,9 @@ partial struct FishSchoolMovementSystem : ISystem
                     new Vector3(fishTransform.Position.x, fishTransform.Position.y,
                         fishTransform.Position.z)) < seperationRadius)
             {
-                Vector3 difference = fishEntityTransform - new Vector3(fishTransform.ValueRO.Position.x,
-                    fishTransform.ValueRO.Position.y, fishTransform.ValueRO.Position.z);
-                moveAway += difference.normalized / difference.magnitude; // something with scaling
+                Vector3 difference = fishEntityTransform - new Vector3(fishTransform.Position.x,
+                    fishTransform.Position.y, fishTransform.Position.z);
+                moveAway += difference.normalized / difference.magnitude; // something with scaling 
                 seperationCount++;
             }
         }
@@ -240,7 +239,10 @@ partial struct FishSchoolMovementSystem : ISystem
         }
 
         return moveAway.normalized;
+
     }
+    
+    
     [BurstCompile]
     public partial struct SeparationJob : IJobEntity
     {
@@ -309,8 +311,8 @@ partial struct FishSchoolMovementSystem : ISystem
 
             if (!fish.Fish.Equals(fishEntity) && fishData.SchoolIndex == schoolIndex)
             {
-                averageVelocity += new Vector3(fishTransform.ValueRO.Position.x, fishTransform.ValueRO.Position.y,
-                    fishTransform.ValueRO.Position.z);
+                averageVelocity += new Vector3(fishTransform.Position.x, fishTransform.Position.y,
+                    fishTransform.Position.z);
                 count++;
             }
         }
@@ -320,7 +322,7 @@ partial struct FishSchoolMovementSystem : ISystem
             averageVelocity /= count;
             return averageVelocity.normalized;
         }
-        
+
         return Vector3.zero;
     }
     
