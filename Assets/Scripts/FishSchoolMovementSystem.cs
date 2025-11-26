@@ -8,38 +8,46 @@ using UnityEngine;
 
 partial struct FishSchoolMovementSystem : ISystem
 {
+
+    BufferLookup<SchoolFishes> schoolFishesLookup;
+
     [BurstCompile]
     public void OnCreate(ref SystemState state)
     {
         state.RequireForUpdate<BeginSimulationEntityCommandBufferSystem.Singleton
         >();
+
+        schoolFishesLookup = state.GetBufferLookup<SchoolFishes>();
+
     }
 
     [BurstCompile]
     public void OnUpdate(ref SystemState state)
     {
+        schoolFishesLookup.Update(ref state);
         var ecb =
             SystemAPI.GetSingleton<BeginSimulationEntityCommandBufferSystem.Singleton
             >().CreateCommandBuffer(state.WorldUnmanaged);
 
         // should loop through the different school the cohesion etc. methods needs to loop through the fish of the school they get
-        foreach (var (fishSchoolAttribute, fishSchool) in SystemAPI.Query<RefRW<FishSchoolAttribute>>()
-                     .WithEntityAccess())
+        foreach (var (fishSchoolAttribute, fishBuffer, fishSchool) in SystemAPI.Query<RefRW<FishSchoolAttribute>, DynamicBuffer<SchoolFishes>>().WithEntityAccess())
         {
-            foreach (var fish in fishSchoolAttribute.ValueRW.Fishes)
+            var schoolBuffer = state.EntityManager.GetBuffer<SchoolFishes>(fishSchool);
+
+            foreach (var fish in schoolBuffer)
             {
                 Vector3 fishPosition = state.EntityManager.GetComponentData<LocalTransform>(fish).Position;
-               /* Vector3 cohesion = Cohesion(ref state, fish, fishSchoolAttribute.ValueRW.Fishes, fishPosition,
-                                       fishSchoolAttribute.ValueRO.SchoolIndex) *
-                                   fishSchoolAttribute.ValueRO.CohesionWeight;*/
-                
-            /*    Vector3 separation =
-                    Separation(ref state, fish, fishSchoolAttribute.ValueRW.Fishes, fishPosition,
-                        fishSchoolAttribute.ValueRO.SchoolIndex,
-                        fishSchoolAttribute.ValueRO.SeparationRadius) * fishSchoolAttribute.ValueRO.SeparationWeight;*/
-            /*   Vector3 alignment = Alignment(ref state, fish, fishSchoolAttribute.ValueRW.Fishes, fishPosition,
-                                        fishSchoolAttribute.ValueRO.SchoolIndex) *
-                                    fishSchoolAttribute.ValueRO.AlignmentWeight;*/
+            /*
+            *                Vector3 fishPosition = state.EntityManager.GetComponentData<LocalTransform>(fish.Fish).Position;
+                Vector3 cohesion = Cohesion(ref state, fish.Fish, schoolBuffer, fishPosition, fishSchoolAttribute.ValueRO.SchoolIndex) *
+                                   fishSchoolAttribute.ValueRO.CohesionWeight;
+                Vector3 separation =
+                    Separation(ref state, fish.Fish, schoolBuffer, fishPosition, fishSchoolAttribute.ValueRO.SchoolIndex,
+                        fishSchoolAttribute.ValueRO.SeparationRadius) * fishSchoolAttribute.ValueRO.SeparationWeight;
+                Vector3 alignment = Alignment(ref state, fish.Fish, schoolBuffer, fishPosition, fishSchoolAttribute.ValueRO.SchoolIndex) *
+                                    fishSchoolAttribute.ValueRO.AlignmentWeight;
+            */
+
             /* Cohesion Job */
             NativeArray<Vector3> centerOfMass = new NativeArray<Vector3>(1, Allocator.TempJob);
             NativeArray<int> cohesionCount = new NativeArray<int>(1, Allocator.TempJob);
@@ -56,6 +64,7 @@ partial struct FishSchoolMovementSystem : ISystem
             /* Seperation Job */
             NativeArray<Vector3> moveAway = new NativeArray<Vector3>(1, Allocator.TempJob);
             NativeArray<int> seperationCount = new NativeArray<int>(1, Allocator.TempJob);
+
 
             SeparationJob separationJob = new SeparationJob
             {
@@ -102,26 +111,25 @@ partial struct FishSchoolMovementSystem : ISystem
                 alignmentCount.Dispose();
                 
                 /* Get the fish data and apply the rules */
-                
-                var fishRotation = state.EntityManager.GetComponentData<LocalTransform>(fish).Rotation;
-                var fishData = state.EntityManager.GetComponentData<FishAttributes>(fish);
-                var aquaData = state.EntityManager.GetComponentData<AquaticAnimalAttributes>(fish);
+                var fishRotation = state.EntityManager.GetComponentData<LocalTransform>(fish.Fish).Rotation;
+                var fishData = state.EntityManager.GetComponentData<FishAttributes>(fish.Fish);
+                var aquaData = state.EntityManager.GetComponentData<AquaticAnimalAttributes>(fish.Fish);
                 fishData.Velocity += cohesion + separation + alignment;
 
                 fishData.Velocity = Vector3.ClampMagnitude(fishData.Velocity,
                     aquaData.Speed);
                 fishPosition += fishData.Velocity * SystemAPI.Time.DeltaTime;
                 fishRotation = UnityEngine.Quaternion.LookRotation(fishData.Velocity);
-                ecb.SetComponent<FishAttributes>(fish, new FishAttributes
+                ecb.SetComponent<FishAttributes>(fish.Fish, new FishAttributes
                 {
                     Velocity = fishData.Velocity,
                     SchoolIndex = fishData.SchoolIndex
                 });
-                ecb.SetComponent<LocalTransform>(fish, new LocalTransform
+                ecb.SetComponent<LocalTransform>(fish.Fish, new LocalTransform
                 {
                     Position = fishPosition,
                     Rotation = fishRotation,
-                    Scale = state.EntityManager.GetComponentData<LocalTransform>(fish).Scale
+                    Scale = state.EntityManager.GetComponentData<LocalTransform>(fish.Fish).Scale
                 });
             }
         }
@@ -129,8 +137,7 @@ partial struct FishSchoolMovementSystem : ISystem
 
     // Rule 1:
     [BurstCompile]
-    public Vector3 Cohesion(ref SystemState state, Entity fishEntity, NativeArray<Entity> schoolFishes,
-        Vector3 fishEntityTransform, int schoolIndex)
+    public Vector3 Cohesion(ref SystemState state, Entity fishEntity, DynamicBuffer<SchoolFishes> schoolFishes, Vector3 fishEntityTransform, int schoolIndex)
     {
         // Rule 1: Cohesion
         Vector3 centerOfMass = Vector3.zero;
@@ -140,7 +147,10 @@ partial struct FishSchoolMovementSystem : ISystem
                      .Query<RefRW<FishAttributes>, RefRW<LocalTransform>>()
                      .WithEntityAccess())
         {
-            if (fishAttributes.ValueRO.SchoolIndex == schoolIndex && !fishEntity.Equals(fish))
+            var fishData = state.EntityManager.GetComponentData<FishAttributes>(fish.Fish);
+            var fishTransform = state.EntityManager.GetComponentData<LocalTransform>(fish.Fish);
+                    
+            if (!fish.Fish.Equals(fishEntity) && fishData.SchoolIndex == schoolIndex)
             {
                 var pos = new Vector3(localTransform.ValueRO.Position.x, localTransform.ValueRO.Position.y,
                     localTransform.ValueRO.Position.z);
@@ -202,21 +212,20 @@ partial struct FishSchoolMovementSystem : ISystem
 
     // Rule 2:
     [BurstCompile]
-    public Vector3 Separation(ref SystemState state, Entity fishEntity, NativeArray<Entity> schoolFishes,
+    public Vector3 Separation(ref SystemState state, Entity fishEntity, DynamicBuffer<SchoolFishes> schoolFishes,
         Vector3 fishEntityTransform, int schoolIndex, float seperationRadius)
     {
         Vector3 moveAway = Vector3.zero;
         int seperationCount = 0;
-
-        foreach (var (fishAttributes, fishTransform, fish) in SystemAPI
-                     .Query<RefRW<FishAttributes>, RefRW<LocalTransform>>()
-                     .WithEntityAccess())
+        foreach (var neighbor in schoolFishes)
         {
-            if (!fishEntity.Equals(fish) && fishAttributes.ValueRO.SchoolIndex == schoolIndex
-                                         && Vector3.Distance(fishEntityTransform,
-                                             new Vector3(fishTransform.ValueRO.Position.x,
-                                                 fishTransform.ValueRO.Position.y,
-                                                 fishTransform.ValueRO.Position.z)) < seperationRadius)
+            var fishData = state.EntityManager.GetComponentData<FishAttributes>(neighbor.Fish);
+            var fishTransform = state.EntityManager.GetComponentData<LocalTransform>(neighbor.Fish);
+
+            if (!neighbor.Fish.Equals(fishEntity) && fishData.SchoolIndex == schoolIndex &&
+                Vector3.Distance(fishEntityTransform,
+                    new Vector3(fishTransform.Position.x, fishTransform.Position.y,
+                        fishTransform.Position.z)) < seperationRadius)
             {
                 Vector3 difference = fishEntityTransform - new Vector3(fishTransform.ValueRO.Position.x,
                     fishTransform.ValueRO.Position.y, fishTransform.ValueRO.Position.z);
@@ -288,17 +297,17 @@ partial struct FishSchoolMovementSystem : ISystem
 
     // Rule 3
     [BurstCompile]
-    public Vector3 Alignment(ref SystemState state, Entity fishEntity, NativeArray<Entity> fishSchool,
+    public Vector3 Alignment(ref SystemState state, Entity fishEntity, DynamicBuffer<SchoolFishes> fishSchool,
         Vector3 fishEntityTransform, int schoolIndex)
     {
         Vector3 averageVelocity = Vector3.zero;
         int count = 0;
-
-        foreach (var (fishAttributes, fishTransform, fish) in SystemAPI
-                     .Query<RefRW<FishAttributes>, RefRW<LocalTransform>>()
-                     .WithEntityAccess())
+        foreach (var fish in fishSchool)
         {
-            if (!fish.Equals(fishEntity) && fishAttributes.ValueRO.SchoolIndex == schoolIndex)
+            var fishData = state.EntityManager.GetComponentData<FishAttributes>(fish.Fish);
+            var fishTransform = state.EntityManager.GetComponentData<LocalTransform>(fish.Fish);
+
+            if (!fish.Fish.Equals(fishEntity) && fishData.SchoolIndex == schoolIndex)
             {
                 averageVelocity += new Vector3(fishTransform.ValueRO.Position.x, fishTransform.ValueRO.Position.y,
                     fishTransform.ValueRO.Position.z);

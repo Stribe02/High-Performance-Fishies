@@ -1,8 +1,11 @@
 //using System.Collections.Generic; //only used for list rn, should be replaced when optimising
+using System.Collections;
 using System.Linq;
 using Unity.Burst;
 using Unity.Collections;
+using Unity.Collections.LowLevel.Unsafe;
 using Unity.Entities;
+using Unity.Jobs;
 using Unity.Mathematics;
 using Unity.Physics;
 using Unity.Transforms;
@@ -10,73 +13,74 @@ using Unity.Transforms;
 [CreateAfter(typeof(FishSchoolSpawner))]
 partial struct PredatorScareSystem : ISystem
 {
-    //float prevCohesionWeight;
-    //float prevSeparationWeight;
-    float prevAlignmentWeight;
-    float prevSeparationRadius;
     bool fishGotScared;
+    ComponentLookup<FishSchoolAttribute> schoolAttributeLookup;
+    EntityQuery query_schools;
 
     [BurstCompile]
     public void OnCreate(ref SystemState state)
     {
-        //currently just settimg them to the default but we should find a way to temporarily keep the weights they were before being scared so we can set them agai when the shark isnt close enough
-        //prevCohesionWeight = 1f;
-        //prevSeparationWeight = 1f;
-        prevAlignmentWeight = 1f;
-        prevSeparationRadius = 2f;
+        schoolAttributeLookup = state.GetComponentLookup<FishSchoolAttribute>(true);
         
+        query_schools = new EntityQueryBuilder(Allocator.Temp).
+            WithAll<FishSchoolAttribute>().
+            Build(ref state);
     }
 
     [BurstCompile]
     public void OnUpdate(ref SystemState state)
     {
-        NativeList<Entity> hitSchools = new NativeList<Entity>(Allocator.Temp);
+        schoolAttributeLookup.Update(ref state);
+        
+        var ecb =
+            SystemAPI.GetSingleton<BeginSimulationEntityCommandBufferSystem.Singleton
+            >().CreateCommandBuffer(state.WorldUnmanaged);
         
         foreach (var (transform, shark) in SystemAPI.Query<RefRW<LocalTransform>>().WithAll<PredatorTag>().WithEntityAccess())
         {
+            NativeList<Entity> hitSchools = new NativeList<Entity>(Allocator.Temp);
             hitSchools = PointDistanceCheck(state.EntityManager.GetComponentData<LocalTransform>(shark).Position, 2f, ref state);
-
+            
             if (!hitSchools.IsEmpty)
             {
-                foreach (Entity school in hitSchools)
+                NativeList<Entity> tempList = new NativeList<Entity>(Allocator.TempJob);
+                tempList.CopyFrom(hitSchools);
+                JobHandle changeJob = new ChangeSchoolAttributesJob
                 {
-                    var schooldata = state.EntityManager.GetComponentData<FishSchoolAttribute>(school);
-                    state.EntityManager.SetComponentData<FishSchoolAttribute>(school, new FishSchoolAttribute
-                    {
-                        SchoolIndex = schooldata.SchoolIndex,
-                        CohesionWeight = -3f,
-                        SeparationWeight = -1f,
-                        AlignmentWeight = prevAlignmentWeight,
-                        SeparationRadius = prevSeparationRadius,
-                        Fishes = schooldata.Fishes,
-                        FlockSize = schooldata.FlockSize,
-                        FishPrefab = schooldata.FishPrefab,
-                        SchoolEntity = schooldata.SchoolEntity
-                    });
-                }
-                fishGotScared = true;
+                    ecb = ecb,
+                    schools = tempList,
+                    cw = -1f,
+                    sw = -1f,
+                    aw = 1f,
+                    sr = 2f,
+                    schoolData = schoolAttributeLookup
+                }.Schedule(state.Dependency);
+                changeJob.Complete();
+                tempList.Dispose();
                 hitSchools.Dispose();
+
+                fishGotScared = true;
+
             }
             else if (fishGotScared)
             {
-                foreach (var (fishSchoolAtt, fishSchoolEnt) in SystemAPI.Query<RefRW<FishSchoolAttribute>>().WithEntityAccess())
+                NativeList<Entity> tempList = query_schools.ToEntityListAsync(Allocator.TempJob, out JobHandle test);
+
+                JobHandle changeJob = new ChangeSchoolAttributesJob
                 {
-                    var schooldata = state.EntityManager.GetComponentData<FishSchoolAttribute>(fishSchoolEnt);
-                    state.EntityManager.SetComponentData<FishSchoolAttribute>(fishSchoolEnt, new FishSchoolAttribute
-                    {
-                        SchoolIndex = schooldata.SchoolIndex,
-                        CohesionWeight = 1f,
-                        SeparationWeight = 1f,
-                        AlignmentWeight = 1f,
-                        SeparationRadius = 2f,
-                        Fishes = schooldata.Fishes,
-                        FlockSize = schooldata.FlockSize,
-                        FishPrefab = schooldata.FishPrefab,
-                        SchoolEntity = schooldata.SchoolEntity
-                    });
-                }
+                    ecb = ecb,
+                    schools = tempList,
+                    cw = 1f,
+                    sw = 1f,
+                    aw = 1f,
+                    sr = 2f,
+                    schoolData = schoolAttributeLookup
+                }.Schedule(test);
+                changeJob.Complete();
+                tempList.Dispose();
+                
                 fishGotScared = false;
-            }
+            }   
         }
     }
 
@@ -99,7 +103,8 @@ partial struct PredatorScareSystem : ISystem
 
         NativeList<DistanceHit> distanceHits = new NativeList<DistanceHit>(Allocator.Temp);
         collisionWorld.CalculateDistance(input, ref distanceHits);
-        //collisionWorld.Dispose();
+
+        //JOB: find hit schools
         var hitSchools = new NativeList<int>(Allocator.Temp);
         foreach (var hit in distanceHits) { 
             if (state.EntityManager.HasComponent<FishAttributes>(hit.Entity))
@@ -111,6 +116,7 @@ partial struct PredatorScareSystem : ISystem
             }
         }
 
+        //JOB: Get hit school entities
         NativeList<Entity> fishSchoolsHit = new NativeList<Entity>(Allocator.Temp);
         foreach (var (fishSchoolAtt,fishSchoolEnt) in SystemAPI.Query<RefRO<FishSchoolAttribute>>().WithEntityAccess())
         {
@@ -129,6 +135,35 @@ partial struct PredatorScareSystem : ISystem
 
     }
 
-   
+    [BurstCompile]
+    public partial struct ChangeSchoolAttributesJob : IJobEntity
+    {
+        public EntityCommandBuffer ecb;
+        public NativeList<Entity> schools;
+        public float cw;
+        public float sw;
+        public float aw;
+        public float sr;
+        [ReadOnly]
+        public ComponentLookup<FishSchoolAttribute> schoolData;
+        
+        public void Execute() {
+            foreach (Entity school in schools)
+            {
+                ecb.SetComponent<FishSchoolAttribute>(school, new FishSchoolAttribute
+                {
+                    SchoolIndex = schoolData[school].SchoolIndex,
+                    CohesionWeight = cw,
+                    SeparationWeight = sw,
+                    AlignmentWeight = aw,
+                    SeparationRadius = sr,
+                    //Fishes = schoolData[school].Fishes,
+                    FlockSize = schoolData[school].FlockSize,
+                    FishPrefab = schoolData[school].FishPrefab,
+                    SchoolEntity = schoolData[school].SchoolEntity
 
+                });
+            }
+        }
+    }
 }

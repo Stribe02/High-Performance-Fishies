@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using Unity.Collections;
+using Unity.Collections.LowLevel.Unsafe;
 using Unity.Entities;
 using UnityEngine;
 
@@ -44,8 +45,13 @@ public struct FishSchoolAttribute : IComponentData
     public float SeparationWeight;
     public float AlignmentWeight;
     public float SeparationRadius;
-    public NativeArray<Entity> Fishes;
+    //public NativeArray<Entity> Fishes;
     public int FlockSize;
     public Entity FishPrefab;
     public Entity SchoolEntity;
+}
+[InternalBufferCapacity(100)]
+public struct SchoolFishes : IBufferElementData
+{
+    public Entity Fish;
 }
