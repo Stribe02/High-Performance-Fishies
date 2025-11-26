@@ -165,26 +165,5 @@ partial struct PredatorScareSystem : ISystem
                 });
             }
         }
-
     }
-
-    [BurstCompile]
-    public partial struct ChangeSchoolAttributesJob2 : IJobEntity
-    {
-        public float cw;
-        public float sw;
-        public float aw;
-        public float sr;
-        public void Execute(ref FishSchoolAttribute fishSchoolAttribute)
-        {
-            fishSchoolAttribute.CohesionWeight = cw;
-            fishSchoolAttribute.SeparationWeight = sw;
-            fishSchoolAttribute.AlignmentWeight = aw;
-            fishSchoolAttribute.SeparationRadius = sr;
-        }
-
-    }
-
-
-
 }
