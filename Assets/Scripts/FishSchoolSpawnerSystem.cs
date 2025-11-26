@@ -32,6 +32,8 @@ partial struct FishSchoolSpawner : ISystem
             var fishSchoolEntity = state.EntityManager.CreateEntity();
             state.EntityManager.SetName(fishSchoolEntity, $"FishSchool {i}");
             state.EntityManager.AddComponent<FishSchoolAttribute>(fishSchoolEntity);
+            DynamicBuffer<SchoolFishes> schoolBuffer = ecb.AddBuffer<SchoolFishes>(fishSchoolEntity);
+            schoolBuffer.Capacity = config.FlockSize;
             state.EntityManager.SetComponentData<FishSchoolAttribute>(fishSchoolEntity, new FishSchoolAttribute
                 {
                     SchoolIndex = i,
@@ -51,10 +53,12 @@ partial struct FishSchoolSpawner : ISystem
             var color = new URPMaterialPropertyBaseColor { Value = new float4(c.r, c.g, c.b, c.a) };
 
             var fishes = state.EntityManager.Instantiate(fishSchoolData.FishPrefab, fishSchoolData.FlockSize, Allocator.Persistent); //leak?
+            schoolBuffer.EnsureCapacity(fishes.Length);
 
             foreach (var fish in fishes)
             {
-
+                schoolBuffer.Add(new SchoolFishes { Fish = fish });
+         
                 var transform = SystemAPI.GetComponentRW<LocalTransform>(fish);
                 ecb.AddComponent<FishAttributes>(fish);
                 
@@ -83,7 +87,8 @@ partial struct FishSchoolSpawner : ISystem
                 }
             }
 
-            SystemAPI.GetComponentRW<FishSchoolAttribute>(fishSchoolEntity).ValueRW.Fishes = fishes;
+            //SystemAPI.GetComponentRW<FishSchoolAttribute>(fishSchoolEntity).ValueRW.Fishes = fishes;
+            fishes.Dispose();
 
         }
     }
