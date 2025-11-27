@@ -69,19 +69,19 @@ partial struct FishSchoolMovementSystem : ISystem
         // Rule 1: Cohesion
         Vector3 centerOfMass = Vector3.zero; // need to be float3???
         int cohesionCount = 0;
-        foreach (var fish in schoolFishes)
+        
+        foreach (var (fishTransform, fishAttributes ,fish) in SystemAPI.Query<RefRW<LocalTransform>, RefRO<FishAttributes>>()
+                     .WithEntityAccess())
         {
-            var fishData = state.EntityManager.GetComponentData<FishAttributes>(fish);
-            var fishTransform = state.EntityManager.GetComponentData<LocalTransform>(fish);
-                    
-            if (!fish.Equals(fishEntity) && fishData.SchoolIndex == schoolIndex)
+            if (fishAttributes.ValueRO.SchoolIndex == schoolIndex && !fishEntity.Equals(fish))
             {
-                var pos = new Vector3(fishTransform.Position.x, fishTransform.Position.y,
-                    fishTransform.Position.z);
+                var pos = new Vector3(fishTransform.ValueRO.Position.x, fishTransform.ValueRO.Position.y,
+                    fishTransform.ValueRO.Position.z);
                 centerOfMass += pos;
                 cohesionCount++;
             }
         }
+        
         if (cohesionCount > 0)
         {
             centerOfMass /= cohesionCount;
@@ -98,30 +98,28 @@ partial struct FishSchoolMovementSystem : ISystem
     {
         Vector3 moveAway = Vector3.zero;
         int seperationCount = 0;
-        foreach (var neighbor in schoolFishes)
+        
+        
+        foreach (var (fishTransform, fishAttributes ,fish) in SystemAPI.Query<RefRW<LocalTransform>, RefRO<FishAttributes>>()
+                     .WithEntityAccess())
         {
-            var fishData = state.EntityManager.GetComponentData<FishAttributes>(neighbor);
-            var fishTransform = state.EntityManager.GetComponentData<LocalTransform>(neighbor);
-
-            if (!neighbor.Equals(fishEntity) && fishData.SchoolIndex == schoolIndex &&
-                Vector3.Distance(fishEntityTransform,
-                    new Vector3(fishTransform.Position.x, fishTransform.Position.y,
-                        fishTransform.Position.z)) < seperationRadius)
+            if (!fishEntity.Equals(fish) && fishAttributes.ValueRO.SchoolIndex == schoolIndex
+                                         && Vector3.Distance(fishEntityTransform,
+                                             new Vector3(fishTransform.ValueRO.Position.x,
+                                                 fishTransform.ValueRO.Position.y,
+                                                 fishTransform.ValueRO.Position.z)) < seperationRadius)
             {
-                Vector3 difference = fishEntityTransform - new Vector3(fishTransform.Position.x,
-                    fishTransform.Position.y, fishTransform.Position.z);
-                moveAway += difference.normalized / difference.magnitude; // something with scaling 
+                Vector3 difference = fishEntityTransform - new Vector3(fishTransform.ValueRO.Position.x,
+                    fishTransform.ValueRO.Position.y, fishTransform.ValueRO.Position.z);
+                moveAway += difference.normalized / difference.magnitude; // something with scaling
                 seperationCount++;
             }
         }
-
         if (seperationCount > 0)
         {
             moveAway /= seperationCount;
         }
-
         return moveAway.normalized;
-
     }
 
     
@@ -132,15 +130,14 @@ partial struct FishSchoolMovementSystem : ISystem
     {
         Vector3 averageVelocity = Vector3.zero;
         int count = 0;
-        foreach (var fish in fishSchool)
+        
+        foreach (var (fishTransform, fishAttributes ,fish) in SystemAPI.Query<RefRW<LocalTransform>, RefRO<FishAttributes>>()
+                     .WithEntityAccess())
         {
-            var fishData = state.EntityManager.GetComponentData<FishAttributes>(fish);
-            var fishTransform = state.EntityManager.GetComponentData<LocalTransform>(fish);
-
-            if (!fish.Equals(fishEntity) && fishData.SchoolIndex == schoolIndex)
+            if (fishAttributes.ValueRO.SchoolIndex == schoolIndex)
             {
-                averageVelocity += new Vector3(fishTransform.Position.x, fishTransform.Position.y,
-                    fishTransform.Position.z);
+                averageVelocity += new Vector3(fishTransform.ValueRO.Position.x, fishTransform.ValueRO.Position.y,
+                    fishTransform.ValueRO.Position.z);
                 count++;
             }
         }
