@@ -67,13 +67,13 @@ partial struct FishSchoolSpawner : ISystem
 
             JobHandle spawnJob = new SpawnFishJob
             {
-                ecb = ecb,
+                ecb = ecb.AsParallelWriter(),
                 fishes = fishes,
                 color = colorc,
                 linkedEntityGroups = linkedEntityGroupLookup,
                 speed = 2f,
                 schoolIndex = SystemAPI.GetComponentRW<FishSchoolAttribute>(fishSchoolEntity).ValueRW.SchoolIndex
-            }.Schedule(state.Dependency);
+            }.ScheduleParallel(state.Dependency);
             spawnJob.Complete();
 
             fishes.Dispose();
@@ -83,29 +83,30 @@ partial struct FishSchoolSpawner : ISystem
     [BurstCompile]
     public partial struct SpawnFishJob : IJobEntity
     {
-        public EntityCommandBuffer ecb;
-        public NativeArray<Entity> fishes;
-        public BufferLookup<LinkedEntityGroup> linkedEntityGroups;
+        public EntityCommandBuffer.ParallelWriter ecb;
+        [ReadOnly] public NativeArray<Entity> fishes;
+        [ReadOnly] public BufferLookup<LinkedEntityGroup> linkedEntityGroups;
         public float4 color;
         public float speed;
         public int schoolIndex;
-        public void Execute(ref LocalTransform localTransform, ref FishAttributes fishAttributes, ref AquaticAnimalAttributes aquaticAttributes, ref URPMaterialPropertyBaseColor baseColor)
+        public void Execute([ChunkIndexInQuery] int index, ref LocalTransform localTransform, ref FishAttributes fishAttributes, ref AquaticAnimalAttributes aquaticAttributes, ref URPMaterialPropertyBaseColor baseColor)
         {
+            
             var ran = new Unity.Mathematics.Random(((uint)schoolIndex) + 1);
 
             foreach (var fish in fishes)
             {
-                ecb.AddComponent<FishAttributes>(fish, new FishAttributes
+                ecb.AddComponent<FishAttributes>(index, fish, new FishAttributes
                 {
                     SchoolIndex = schoolIndex,
                     Velocity = ran.NextFloat3(0,1) * 2f
                 });
-                ecb.AddComponent<AquaticAnimalAttributes>(fish, new AquaticAnimalAttributes
+                ecb.AddComponent<AquaticAnimalAttributes>(index, fish, new AquaticAnimalAttributes
                 {
                     Speed = speed,
                     Radius = aquaticAttributes.Radius
                 });
-                ecb.AddComponent<LocalTransform>(fish, new LocalTransform
+                ecb.AddComponent<LocalTransform>(index, fish, new LocalTransform
                 {
                     Position = ran.NextFloat3(-10,10),
                     Rotation = localTransform.Rotation,
@@ -116,7 +117,7 @@ partial struct FishSchoolSpawner : ISystem
 
                 foreach (var ent in linkedEnts)
                 {
-                    ecb.SetComponent<URPMaterialPropertyBaseColor>(ent.Value, new URPMaterialPropertyBaseColor { Value = color });
+                    ecb.SetComponent<URPMaterialPropertyBaseColor>(index, ent.Value, new URPMaterialPropertyBaseColor { Value = color });
                 }  
             }
         }

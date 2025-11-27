@@ -47,7 +47,7 @@ partial struct PredatorScareSystem : ISystem
                 tempList.CopyFrom(hitSchools);
                 JobHandle changeJob = new ChangeSchoolAttributesJob
                 {
-                    ecb = ecb,
+                    ecb = ecb.AsParallelWriter(),
                     schools = tempList,
                     cw = -1f,
                     sw = -1f,
@@ -68,14 +68,14 @@ partial struct PredatorScareSystem : ISystem
 
                 JobHandle changeJob = new ChangeSchoolAttributesJob
                 {
-                    ecb = ecb,
+                    ecb = ecb.AsParallelWriter(),
                     schools = tempList,
                     cw = 1f,
                     sw = 1f,
                     aw = 1f,
                     sr = 2f,
                     schoolData = schoolAttributeLookup
-                }.Schedule(test);
+                }.ScheduleParallel(test);
                 changeJob.Complete();
                 tempList.Dispose();
                 
@@ -104,7 +104,6 @@ partial struct PredatorScareSystem : ISystem
         NativeList<DistanceHit> distanceHits = new NativeList<DistanceHit>(Allocator.Temp);
         collisionWorld.CalculateDistance(input, ref distanceHits);
 
-        //JOB: find hit schools
         var hitSchools = new NativeList<int>(Allocator.Temp);
         foreach (var hit in distanceHits) { 
             if (state.EntityManager.HasComponent<FishAttributes>(hit.Entity))
@@ -116,7 +115,6 @@ partial struct PredatorScareSystem : ISystem
             }
         }
 
-        //JOB: Get hit school entities
         NativeList<Entity> fishSchoolsHit = new NativeList<Entity>(Allocator.Temp);
         foreach (var (fishSchoolAtt,fishSchoolEnt) in SystemAPI.Query<RefRO<FishSchoolAttribute>>().WithEntityAccess())
         {
@@ -138,26 +136,24 @@ partial struct PredatorScareSystem : ISystem
     [BurstCompile]
     public partial struct ChangeSchoolAttributesJob : IJobEntity
     {
-        public EntityCommandBuffer ecb;
-        public NativeList<Entity> schools;
+        public EntityCommandBuffer.ParallelWriter ecb;
+        [ReadOnly] public NativeList<Entity> schools;
         public float cw;
         public float sw;
         public float aw;
         public float sr;
-        [ReadOnly]
-        public ComponentLookup<FishSchoolAttribute> schoolData;
+        [ReadOnly] public ComponentLookup<FishSchoolAttribute> schoolData;
         
-        public void Execute() {
+        public void Execute([ChunkIndexInQuery] int index) {
             foreach (Entity school in schools)
             {
-                ecb.SetComponent<FishSchoolAttribute>(school, new FishSchoolAttribute
+                ecb.SetComponent<FishSchoolAttribute>(index,school, new FishSchoolAttribute
                 {
                     SchoolIndex = schoolData[school].SchoolIndex,
                     CohesionWeight = cw,
                     SeparationWeight = sw,
                     AlignmentWeight = aw,
                     SeparationRadius = sr,
-                    //Fishes = schoolData[school].Fishes,
                     FlockSize = schoolData[school].FlockSize,
                     FishPrefab = schoolData[school].FishPrefab,
                     SchoolEntity = schoolData[school].SchoolEntity
