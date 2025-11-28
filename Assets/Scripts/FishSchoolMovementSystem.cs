@@ -58,7 +58,7 @@ partial struct FishSchoolMovementSystem : ISystem
                 cohesionCount = cohesionCount,
                 schoolIndex = fishSchoolAttribute.ValueRO.SchoolIndex
             };
-            var cohesionHandle = cohesionJob.Schedule(state.Dependency);
+            var cohesionHandle = cohesionJob.ScheduleParallel(state.Dependency);
             
             
             /* Seperation Job */
@@ -75,7 +75,7 @@ partial struct FishSchoolMovementSystem : ISystem
                 schoolIndex = fishSchoolAttribute.ValueRO.SchoolIndex,
                 seperationRadius = fishSchoolAttribute.ValueRO.SeparationRadius
             };
-            var separationHandle = separationJob.Schedule(state.Dependency);
+            var separationHandle = separationJob.ScheduleParallel(state.Dependency);
             
             /* AlignmentJob: */
 
@@ -88,7 +88,7 @@ partial struct FishSchoolMovementSystem : ISystem
                     schoolIndex = fishSchoolAttribute.ValueRO.SchoolIndex
                 };
                 
-                JobHandle jobHandle = alignmentJob.Schedule(state.Dependency);
+                JobHandle jobHandle = alignmentJob.ScheduleParallel(state.Dependency);
                 // make sure the jobs are completed
                
                 // yoink the values from job
