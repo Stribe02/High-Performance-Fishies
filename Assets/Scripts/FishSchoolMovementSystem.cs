@@ -169,9 +169,11 @@ partial struct FishSchoolMovementSystem : ISystem
     [BurstCompile]
     public partial struct CohesionJob : IJobEntity
     {
+        [NativeDisableParallelForRestriction]
         public NativeArray<Vector3> centerOfMass;
         public int schoolIndex;
         public Entity fishEntity;
+        [NativeDisableParallelForRestriction]
         public NativeArray<int> cohesionCount;
 
         public void Execute(in LocalTransform fishTransform, in FishAttributes fishAttributes, in Entity fish)
@@ -246,11 +248,13 @@ partial struct FishSchoolMovementSystem : ISystem
     [BurstCompile]
     public partial struct SeparationJob : IJobEntity
     {
+        [NativeDisableParallelForRestriction]
         public NativeArray<Vector3> moveAway;
         public int schoolIndex;
         public Entity fishEntity;
         public Vector3 fishEntityTransform;
         public float seperationRadius;
+        [NativeDisableParallelForRestriction]
         public NativeArray<int> seperationCount;
 
         public void Execute(in LocalTransform fishTransform, in FishAttributes fishAttributes, in Entity fish)
@@ -329,8 +333,10 @@ partial struct FishSchoolMovementSystem : ISystem
     [BurstCompile]
     public partial struct AlignmentJob : IJobEntity
     {
+        [NativeDisableParallelForRestriction]
         public NativeArray<Vector3> averageVelocity;
         public int schoolIndex;
+        [NativeDisableParallelForRestriction]
         public NativeArray<int> count;
 
         public void Execute(in LocalTransform fishTransform, in FishAttributes fishAttributes, in Entity fish)
