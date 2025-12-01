@@ -152,7 +152,7 @@ MonoBehaviour:
   tallFish: {fileID: 8856548824803852618, guid: 3237a6a3b342de1489ee999208c802f5, type: 3}
   longFish: {fileID: 2146448434044857237, guid: bbb716bea1508dc4abb070868db7878c, type: 3}
   numberOfSchools: 3
-  flockSize: 500
+  flockSize: 10
   defaultCohesionWeight: 1
   defaultSeparationWeight: 1
   defaultAlignmentWeight: 1

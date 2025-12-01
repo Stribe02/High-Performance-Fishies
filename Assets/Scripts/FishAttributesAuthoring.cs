@@ -1,9 +1,10 @@
 using Unity.Entities;
+using Unity.Mathematics;
 using UnityEngine;
 
 class FishAttributesAuthoring : MonoBehaviour
 {
-    public Vector3 velocity;
+    public float3 velocity;
     public int schoolIndex;
 }
 
@@ -23,6 +24,6 @@ class FishBaker : Baker<FishAttributesAuthoring>
 
 public struct FishAttributes : IComponentData
 {
-    public Vector3 Velocity;
+    public float3 Velocity;
     public int SchoolIndex;
 }
