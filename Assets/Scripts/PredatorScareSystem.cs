@@ -1,6 +1,3 @@
-//using System.Collections.Generic; //only used for list rn, should be replaced when optimising
-using System.Collections;
-using System.Linq;
 using Unity.Burst;
 using Unity.Collections;
 using Unity.Collections.LowLevel.Unsafe;
@@ -9,157 +6,141 @@ using Unity.Jobs;
 using Unity.Mathematics;
 using Unity.Physics;
 using Unity.Transforms;
+using UnityEngine;
 
 [CreateAfter(typeof(FishSchoolSpawner))]
+[CreateAfter(typeof(PredatorSpawnSystem))]
 partial struct PredatorScareSystem : ISystem
 {
-    bool fishGotScared;
-    ComponentLookup<FishSchoolAttribute> schoolAttributeLookup;
     EntityQuery query_schools;
+    ComponentLookup<FishAttributes> fishAttributeLookup;
 
     [BurstCompile]
     public void OnCreate(ref SystemState state)
     {
-        schoolAttributeLookup = state.GetComponentLookup<FishSchoolAttribute>(true);
-        
+        state.RequireForUpdate<PredatorTag>();
         query_schools = new EntityQueryBuilder(Allocator.Temp).
             WithAll<FishSchoolAttribute>().
             Build(ref state);
+        fishAttributeLookup = state.GetComponentLookup<FishAttributes>();
     }
 
     [BurstCompile]
     public void OnUpdate(ref SystemState state)
     {
-        schoolAttributeLookup.Update(ref state);
-        
+        var sharkEntity = SystemAPI.GetSingletonEntity<PredatorTag>();
+
+        fishAttributeLookup.Update(ref state);
+
         var ecb =
             SystemAPI.GetSingleton<BeginSimulationEntityCommandBufferSystem.Singleton
             >().CreateCommandBuffer(state.WorldUnmanaged);
-        
-        foreach (var (transform, shark) in SystemAPI.Query<RefRW<LocalTransform>>().WithAll<PredatorTag>().WithEntityAccess())
+
+        JobHandle scareJob = new MarkSchoolsScared
         {
-            NativeList<Entity> hitSchools = new NativeList<Entity>(Allocator.Temp);
-            hitSchools = PointDistanceCheck(state.EntityManager.GetComponentData<LocalTransform>(shark).Position, 2f, ref state);
-            
-            if (!hitSchools.IsEmpty)
-            {
-                NativeList<Entity> tempList = new NativeList<Entity>(Allocator.TempJob);
-                tempList.CopyFrom(hitSchools);
-                JobHandle changeJob = new ChangeSchoolAttributesJob
-                {
-                    ecb = ecb.AsParallelWriter(),
-                    schools = tempList,
-                    cw = -1f,
-                    sw = -1f,
-                    aw = 1f,
-                    sr = 2f,
-                    schoolData = schoolAttributeLookup
-                }.Schedule(state.Dependency);
-                changeJob.Complete();
-                tempList.Dispose();
-                hitSchools.Dispose();
+            ecb = ecb.AsParallelWriter(),
+            fishAttributeLookups = fishAttributeLookup,
+            collisionWorld = SystemAPI.GetSingleton<PhysicsWorldSingleton>().CollisionWorld,
+            pos = state.EntityManager.GetComponentData<LocalTransform>(sharkEntity).Position,
+            dis = state.EntityManager.GetComponentData<AquaticAnimalAttributes>(sharkEntity).Radius
+        }.ScheduleParallel(state.Dependency);
+        scareJob.Complete();
 
-                fishGotScared = true;
-
-            }
-            else if (fishGotScared)
-            {
-                NativeList<Entity> tempList = query_schools.ToEntityListAsync(Allocator.TempJob, out JobHandle test);
-
-                JobHandle changeJob = new ChangeSchoolAttributesJob
-                {
-                    ecb = ecb.AsParallelWriter(),
-                    schools = tempList,
-                    cw = 1f,
-                    sw = 1f,
-                    aw = 1f,
-                    sr = 2f,
-                    schoolData = schoolAttributeLookup
-                }.ScheduleParallel(test);
-                changeJob.Complete();
-                tempList.Dispose();
-                
-                fishGotScared = false;
-            }   
-        }
+        JobHandle setWeightsJob = new SetSchoolAttributesJob
+        {
+            ecb = ecb.AsParallelWriter(),
+            scaredWeight = -1,
+            defaultWeight = 1
+        }.ScheduleParallel(state.Dependency);
+        setWeightsJob.Complete();
     }
 
     [BurstCompile]
-    public NativeList<Entity> PointDistanceCheck(float3 pos, float dis, ref SystemState state)
-    {
-        var collisionWorld = SystemAPI.GetSingleton<PhysicsWorldSingleton>().CollisionWorld;
-
-        PointDistanceInput input = new PointDistanceInput()
-        {
-            Position = pos,
-            MaxDistance = dis,
-            Filter = new CollisionFilter()
-            {
-                BelongsTo = ~0u,
-                CollidesWith = ~0u, // all 1s, so all layers, collide with everything
-                GroupIndex = 0
-            }
-        };
-
-        NativeList<DistanceHit> distanceHits = new NativeList<DistanceHit>(Allocator.Temp);
-        collisionWorld.CalculateDistance(input, ref distanceHits);
-
-        var hitSchools = new NativeList<int>(Allocator.Temp);
-        foreach (var hit in distanceHits) { 
-            if (state.EntityManager.HasComponent<FishAttributes>(hit.Entity))
-            {
-                if (!hitSchools.Contains(state.EntityManager.GetComponentData<FishAttributes>(hit.Entity).SchoolIndex))
-                {
-                    hitSchools.Add((state.EntityManager.GetComponentData<FishAttributes>(hit.Entity).SchoolIndex));
-                }
-            }
-        }
-
-        NativeList<Entity> fishSchoolsHit = new NativeList<Entity>(Allocator.Temp);
-        foreach (var (fishSchoolAtt,fishSchoolEnt) in SystemAPI.Query<RefRO<FishSchoolAttribute>>().WithEntityAccess())
-        {
-            if(fishSchoolEnt != null && SystemAPI.GetComponentRO<FishSchoolAttribute>(fishSchoolEnt).IsValid)
-            {
-                if (hitSchools.Contains(SystemAPI.GetComponentRO<FishSchoolAttribute>(fishSchoolEnt).ValueRO.SchoolIndex) && fishSchoolsHit.IsCreated && !fishSchoolsHit.Contains(fishSchoolEnt))
-                {
-                    fishSchoolsHit.Add(fishSchoolEnt);
-                }
-            }
-        }
-
-        hitSchools.Dispose();
-
-        return fishSchoolsHit;
-
-    }
-
-    [BurstCompile]
-    public partial struct ChangeSchoolAttributesJob : IJobEntity
+    public partial struct MarkSchoolsScared : IJobEntity
     {
         public EntityCommandBuffer.ParallelWriter ecb;
-        [ReadOnly] public NativeList<Entity> schools;
-        public float cw;
-        public float sw;
-        public float aw;
-        public float sr;
-        [ReadOnly] public ComponentLookup<FishSchoolAttribute> schoolData;
+        [ReadOnly] public ComponentLookup<FishAttributes> fishAttributeLookups;
+        [ReadOnly] public CollisionWorld collisionWorld;
+        public float3 pos;
+        public float dis;
         
-        public void Execute([ChunkIndexInQuery] int index) {
-            foreach (Entity school in schools)
+        public void Execute([ChunkIndexInQuery] int index, in FishSchoolAttribute fishSchoolAttribute, in Entity fishSchool)
+        {
+            PointDistanceInput input = new PointDistanceInput()
             {
-                ecb.SetComponent<FishSchoolAttribute>(index,school, new FishSchoolAttribute
+                Position = pos,
+                MaxDistance = dis,
+                Filter = new CollisionFilter()
                 {
-                    SchoolIndex = schoolData[school].SchoolIndex,
-                    CohesionWeight = cw,
-                    SeparationWeight = sw,
-                    AlignmentWeight = aw,
-                    SeparationRadius = sr,
-                    FlockSize = schoolData[school].FlockSize,
-                    FishPrefab = schoolData[school].FishPrefab,
-                    SchoolEntity = schoolData[school].SchoolEntity
+                    BelongsTo = ~0u,
+                    CollidesWith = ~0u, // all 1s, so all layers, collide with everything
+                    GroupIndex = 0
+                }
+            };
+
+            NativeList<DistanceHit> distanceHits = new NativeList<DistanceHit>(Allocator.TempJob);
+            collisionWorld.CalculateDistance(input, ref distanceHits);
+
+            var hitSchoolIndexes = new NativeList<int>(Allocator.TempJob);
+            foreach (var hit in distanceHits)
+            {
+                if(fishAttributeLookups.HasComponent(hit.Entity))
+                {
+                    if (!hitSchoolIndexes.Contains(fishAttributeLookups.GetRefRO(hit.Entity).ValueRO.SchoolIndex))
+                    {
+                        hitSchoolIndexes.Add(fishAttributeLookups.GetRefRO(hit.Entity).ValueRO.SchoolIndex);
+                    }
+                }
+            }
+            distanceHits.Dispose();
+
+            if (hitSchoolIndexes.Contains(fishSchoolAttribute.SchoolIndex))
+            {
+                ecb.SetComponentEnabled<ScaredTag>(index, fishSchool, true);
+            }
+            hitSchoolIndexes.Dispose();
+        }
+    }
+
+    [BurstCompile]
+    [WithOptions(EntityQueryOptions.IgnoreComponentEnabledState)]
+    public partial struct SetSchoolAttributesJob : IJobEntity
+    {
+        public EntityCommandBuffer.ParallelWriter ecb;
+        public float scaredWeight;
+        public float defaultWeight;
+
+        public void Execute([ChunkIndexInQuery] int index, in FishSchoolAttribute fishSchoolAttribute, EnabledRefRW<ScaredTag> scared, in Entity school)
+        {
+            if (scared.ValueRO == true) {
+                ecb.SetComponent<FishSchoolAttribute>(index, school, new FishSchoolAttribute
+                {
+                    SchoolIndex = fishSchoolAttribute.SchoolIndex,
+                    CohesionWeight = scaredWeight,
+                    SeparationWeight = scaredWeight,
+                    AlignmentWeight = fishSchoolAttribute.AlignmentWeight,
+                    SeparationRadius = fishSchoolAttribute.SeparationRadius,
+                    FlockSize = fishSchoolAttribute.FlockSize,
+                    //FishPrefab = fishSchoolAttribute.FishPrefab,
+                    SchoolEntity = fishSchoolAttribute.SchoolEntity
+
+                });
+            } else if (scared.ValueRO == false)
+            {
+                ecb.SetComponent<FishSchoolAttribute>(index, school, new FishSchoolAttribute
+                {
+                    SchoolIndex = fishSchoolAttribute.SchoolIndex,
+                    CohesionWeight = defaultWeight,
+                    SeparationWeight = defaultWeight,
+                    AlignmentWeight = fishSchoolAttribute.AlignmentWeight,
+                    SeparationRadius = fishSchoolAttribute.SeparationRadius,
+                    FlockSize = fishSchoolAttribute.FlockSize,
+                    //FishPrefab = fishSchoolAttribute.FishPrefab,
+                    SchoolEntity = fishSchoolAttribute.SchoolEntity
 
                 });
             }
+            scared.ValueRW = false;
         }
     }
 }

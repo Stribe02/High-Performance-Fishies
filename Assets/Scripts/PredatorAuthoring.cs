@@ -17,12 +17,6 @@ class PredatorAuthoringBaker : Baker<PredatorAuthoring>
         {
             Prefab = GetEntity(authoring.prefab, TransformUsageFlags.Dynamic)
         });
-        //AddComponent(entity, new AquaticAnimalAttributes
-        //{
-        //    Speed = authoring.speed,
-        //    Radius = authoring.radius
-        //});
-        //AddComponent(entity, new PredatorTag());
     }
 }
 

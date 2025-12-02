@@ -1,4 +1,3 @@
-//using System.Numerics;
 using Unity.Burst;
 using Unity.Collections;
 using Unity.Entities;
@@ -53,28 +52,5 @@ partial struct PredatorMovementSystem : ISystem
                 targetPos[0] = randomVector;
             }
         }
-    }
-
-    /*Old method */
-    /*  
-    foreach (var (transform, entity) in SystemAPI.Query<RefRW<LocalTransform>>().WithAll<PredatorTag>().WithEntityAccess()) {
-           
-        Vector3 dir = (targetPos - new Vector3(transform.ValueRW.Position.x, transform.ValueRW.Position.y, transform.ValueRW.Position.z)).normalized;
-        
-        if (dir != Vector3.zero)
-        {
-            Quaternion rot = Quaternion.LookRotation(dir);
-            transform.ValueRW.Rotation = Quaternion.Slerp(transform.ValueRW.Rotation, rot, 2f * Time.deltaTime);
-        }
-
-        transform.ValueRW.Position += transform.ValueRW.Forward() * 15f * Time.deltaTime;
-
-        if (Vector3.Distance(transform.ValueRW.Position, targetPos) < 5f)
-        {
-            targetPos = new Vector3(Random.Range(-100, 100), Random.Range(-100, 100), Random.Range(-100, 100));
-        }
-
-        
-    }*/
-    
+    }    
 }

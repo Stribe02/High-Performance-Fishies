@@ -6,6 +6,7 @@ using Unity.Mathematics;
 using Unity.Transforms;
 using UnityEngine;
 
+[CreateAfter(typeof(FishSchoolSpawner))]
 partial struct FishSchoolMovementSystem : ISystem
 {
 

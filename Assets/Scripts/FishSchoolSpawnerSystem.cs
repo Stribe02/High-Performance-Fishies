@@ -1,4 +1,4 @@
-using System;
+using NUnit.Framework.Constraints;
 using Unity.Burst;
 using Unity.Collections;
 using Unity.Entities;
@@ -13,6 +13,8 @@ using UnityEngine;
 partial struct FishSchoolSpawner : ISystem
 {
     BufferLookup<LinkedEntityGroup> linkedEntityGroupLookup;
+    BufferLookup<fishPrefabs> fishPrefabsLookup;
+    ComponentTypeSet fishComponents;
     
     [BurstCompile]
     public void OnCreate(ref SystemState state)
@@ -21,10 +23,12 @@ partial struct FishSchoolSpawner : ISystem
         state.RequireForUpdate<BeginSimulationEntityCommandBufferSystem.Singleton>();
 
         linkedEntityGroupLookup = state.GetBufferLookup<LinkedEntityGroup>();
+        fishPrefabsLookup = state.GetBufferLookup<fishPrefabs>();
 
+        fishComponents = new ComponentTypeSet(ComponentType.ReadWrite<FishAttributes>(), ComponentType.ReadWrite<AquaticAnimalAttributes>(), ComponentType.ReadWrite<LocalTransform>());
     }
 
-    [BurstCompile]
+    //[BurstCompile]
     public void OnUpdate(ref SystemState state)
     {
         state.Enabled = false;
@@ -32,16 +36,24 @@ partial struct FishSchoolSpawner : ISystem
         var config = SystemAPI.GetSingleton<Config>();
         var ecb = SystemAPI.GetSingleton<BeginSimulationEntityCommandBufferSystem.Singleton>().CreateCommandBuffer(state.WorldUnmanaged);
 
-        for (int i = 0; i < config.NumberOfSchools; i++)
+        fishPrefabsLookup.Update(ref state);
+        fishPrefabsLookup.TryGetBuffer(SystemAPI.GetSingletonEntity<Config>(), out DynamicBuffer<fishPrefabs> fishPrefabs);
+        
+        for (int i = 0; i < fishPrefabs.Length; i++)
         {
 
             var fishSchoolEntity = state.EntityManager.CreateEntity();
             state.EntityManager.SetName(fishSchoolEntity, $"FishSchool {i}");
             state.EntityManager.AddComponent<FishSchoolAttribute>(fishSchoolEntity);
+            state.EntityManager.AddComponent<ScaredTag>(fishSchoolEntity);
+            state.EntityManager.SetComponentEnabled<ScaredTag>(fishSchoolEntity, false);
 
             DynamicBuffer<SchoolFishes> schoolBuffer = ecb.AddBuffer<SchoolFishes>(fishSchoolEntity);
             schoolBuffer.Capacity = config.FlockSize;
 
+            //Re-getting the buffer due to structural changes
+            fishPrefabsLookup.Update(ref state);
+            fishPrefabsLookup.TryGetBuffer(SystemAPI.GetSingletonEntity<Config>(), out fishPrefabs);
             state.EntityManager.SetComponentData<FishSchoolAttribute>(fishSchoolEntity, new FishSchoolAttribute
                 {
                     SchoolIndex = i,
@@ -50,15 +62,17 @@ partial struct FishSchoolSpawner : ISystem
                     SeparationWeight = config.DefaultSeparationWeight,
                     AlignmentWeight = config.DefaultAlignmentWeight,
                     SeparationRadius = config.DefaultSeparationRadius,
-                    FishPrefab = config.SmallFish
+                    FishPrefab = fishPrefabs.ElementAt(i).fishPrefab
                 }
             );
             var fishSchoolData = state.EntityManager.GetComponentData<FishSchoolAttribute>(fishSchoolEntity);
 
+
+
             Color c = UnityEngine.Random.ColorHSV(0f, 1f, 1f, 1f, 0.5f, 1f);
             var colorc = new float4(c.r, c.g, c.b, c.a);
 
-            var fishes = state.EntityManager.Instantiate(fishSchoolData.FishPrefab, fishSchoolData.FlockSize, Allocator.Persistent); //leak?
+            var fishes = state.EntityManager.Instantiate(fishSchoolData.FishPrefab, fishSchoolData.FlockSize, Allocator.TempJob); //leak?
 
             schoolBuffer.EnsureCapacity(fishes.Length);
             schoolBuffer.AddRange(fishes.Reinterpret<SchoolFishes>());
@@ -71,6 +85,7 @@ partial struct FishSchoolSpawner : ISystem
                 fishes = fishes,
                 color = colorc,
                 linkedEntityGroups = linkedEntityGroupLookup,
+                fishComponents = fishComponents,
                 speed = 2f,
                 schoolIndex = SystemAPI.GetComponentRW<FishSchoolAttribute>(fishSchoolEntity).ValueRW.SchoolIndex
             }.ScheduleParallel(state.Dependency);
@@ -78,6 +93,10 @@ partial struct FishSchoolSpawner : ISystem
 
             fishes.Dispose();
         }
+
+
+        
+
     }
 
     [BurstCompile]
@@ -86,6 +105,7 @@ partial struct FishSchoolSpawner : ISystem
         public EntityCommandBuffer.ParallelWriter ecb;
         [ReadOnly] public NativeArray<Entity> fishes;
         [ReadOnly] public BufferLookup<LinkedEntityGroup> linkedEntityGroups;
+        public ComponentTypeSet fishComponents;
         public float4 color;
         public float speed;
         public int schoolIndex;
@@ -93,20 +113,21 @@ partial struct FishSchoolSpawner : ISystem
         {
             
             var ran = new Unity.Mathematics.Random(((uint)schoolIndex) + 1);
+            ecb.AddComponent(index, fishes, in fishComponents);
 
             foreach (var fish in fishes)
             {
-                ecb.AddComponent<FishAttributes>(index, fish, new FishAttributes
+                ecb.SetComponent<FishAttributes>(index, fish, new FishAttributes
                 {
                     SchoolIndex = schoolIndex,
                     Velocity = ran.NextFloat3(0,1) * 2f
                 });
-                ecb.AddComponent<AquaticAnimalAttributes>(index, fish, new AquaticAnimalAttributes
+                ecb.SetComponent<AquaticAnimalAttributes>(index, fish, new AquaticAnimalAttributes
                 {
                     Speed = speed,
                     Radius = aquaticAttributes.Radius
                 });
-                ecb.AddComponent<LocalTransform>(index, fish, new LocalTransform
+                ecb.SetComponent<LocalTransform>(index, fish, new LocalTransform
                 {
                     Position = ran.NextFloat3(-10,10),
                     Rotation = localTransform.Rotation,
