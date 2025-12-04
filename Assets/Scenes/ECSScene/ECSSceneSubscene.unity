@@ -197,11 +197,14 @@ MonoBehaviour:
   - {fileID: 2146448434044857237, guid: 7515f492c326e8f4a9c82805b8b66b1c, type: 3}
   - {fileID: 5578838254241686288, guid: a098ae37346453e46859ef8247c1dc93, type: 3}
   - {fileID: 8856548824803852618, guid: fb05bb949de498940bf301c022f5461c, type: 3}
+  rockComponent: {fileID: 0}
+  scheduleType: 2
   flockSize: 100
   defaultCohesionWeight: 1
   defaultSeparationWeight: 1
   defaultAlignmentWeight: 1
   defaultSeparationRadius: 2
+  shouldSpawnRock: 0
 --- !u!4 &1448823454
 Transform:
   m_ObjectHideFlags: 0

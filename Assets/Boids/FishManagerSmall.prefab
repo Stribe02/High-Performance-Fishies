@@ -41,13 +41,17 @@ MonoBehaviour:
   m_GameObject: {fileID: 8679848624145500782}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 153d7f5a631d7e14bbc7ad6e88e62f12, type: 3}
+  m_Script: {fileID: 11500000, guid: cdd673563c330e04fab7ded751859c82, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  boidPrefab: {fileID: 5578838254241686288, guid: 9d6bf3424d9e5b24aaaf476fa9bb0d44, type: 3}
-  flockSize: 100
+  boidPrefab: {fileID: 0}
+  flockSize: 50
+  schools: 5
   allBoids: []
-  cohesionWeight: 1
-  separationWeight: 1
-  alignmentWeight: 1
-  separationRadius: 2
+  defaultCohesionWeight: 1
+  defaultSeparationWeight: 1
+  defaultAlignmentWeight: 1
+  defaultSeparationRadius: 2
+  cohesionWeights: []
+  separationWeights: []
+  alignmentWeights: []
