@@ -1,15 +1,12 @@
+using System.Collections.Generic;
 using Unity.Entities;
 using UnityEngine;
 
 class ConfigAuthoring : MonoBehaviour
 {
-    // Hold all prefabs
-    public GameObject smallFish;
-    public GameObject tallFish;
-    public GameObject longFish;
+    public List<GameObject> fishPrefabList;
     public GameObject rockComponent;
     public ScheduleType scheduleType;
-    public int numberOfSchools;
     public int flockSize;
     public float defaultCohesionWeight = 1f;
     public float defaultSeparationWeight = 1f;
@@ -23,14 +20,16 @@ class ConfigAuthoringBaker : Baker<ConfigAuthoring>
     public override void Bake(ConfigAuthoring authoring)
     {
         var entity = GetEntity(authoring, TransformUsageFlags.None); // config itself doesn't need to move, but the fishes do
+
+        var prefabBuffer = AddBuffer<fishPrefabs>(entity);
+        for (int i = 0; i < authoring.fishPrefabList.Count; i++) {
+            prefabBuffer.Add(new fishPrefabs { fishPrefab = GetEntity(authoring.fishPrefabList[i], TransformUsageFlags.Dynamic) });
+        }
+        
         var config = new Config
         {
-            SmallFish = GetEntity(authoring.smallFish, TransformUsageFlags.Dynamic),
-            TallFish = GetEntity(authoring.tallFish, TransformUsageFlags.Dynamic),
-            LongFish = GetEntity(authoring.longFish, TransformUsageFlags.Dynamic),
             RockComponent = GetEntity(authoring.rockComponent, TransformUsageFlags.Dynamic),
             ScheduleType = authoring.scheduleType,
-            NumberOfSchools = authoring.numberOfSchools,
             FlockSize = authoring.flockSize,
             DefaultCohesionWeight = authoring.defaultCohesionWeight,
             DefaultSeparationWeight = authoring.defaultSeparationWeight,
@@ -44,12 +43,8 @@ class ConfigAuthoringBaker : Baker<ConfigAuthoring>
 
 struct Config : IComponentData
 {
-    public Entity SmallFish;
-    public Entity TallFish;
-    public Entity LongFish;
     public Entity RockComponent;
     public ScheduleType ScheduleType;
-    public int NumberOfSchools;
     public int FlockSize;
     public float DefaultCohesionWeight;
     public float DefaultSeparationWeight;
@@ -57,10 +52,15 @@ struct Config : IComponentData
     public float DefaultSeparationRadius;
 }
 
+struct fishPrefabs : IBufferElementData
+{
+    public Entity fishPrefab;
+} 
+   
 public enum ScheduleType{
-    Run,
-    Schedule,
-    ScheduleParallel
+        Run,
+        Schedule,
+        ScheduleParallel
 }
 
 public struct RockSpawning : IComponentData

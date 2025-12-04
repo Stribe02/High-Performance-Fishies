@@ -26,4 +26,10 @@ public struct FishAttributes : IComponentData
 {
     public float3 Velocity;
     public int SchoolIndex;
+    //public Entity FishPrefab;
+}
+
+public struct FishPrefab : IComponentData
+{
+    public Entity prefab;
 }

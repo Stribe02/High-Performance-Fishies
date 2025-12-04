@@ -45,7 +45,6 @@ public struct FishSchoolAttribute : IComponentData
     public float SeparationWeight;
     public float AlignmentWeight;
     public float SeparationRadius;
-    //public NativeArray<Entity> Fishes;
     public int FlockSize;
     public Entity FishPrefab;
     public Entity SchoolEntity;
@@ -54,4 +53,9 @@ public struct FishSchoolAttribute : IComponentData
 public struct SchoolFishes : IBufferElementData
 {
     public Entity Fish;
+}
+
+public struct ScaredTag : IComponentData, IEnableableComponent
+{
+    
 }
