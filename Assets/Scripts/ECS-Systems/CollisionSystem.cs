@@ -128,60 +128,33 @@ partial struct CollisionSystem : ISystem
                  * If fish hit Front: z coord too low, opposite for Back
                  */
                 WallType wallType = wall.GetRefRO(wallEntity).ValueRO.WType;
+                Debug.Log("Before: " + localTransform.GetRefRO(fishEntity).ValueRO.Position);
                 //float3 localPos = this.localTransform.GetRefRW(fishEntity).ValueRW.Position
                 switch (wallType)
                 {
                     case WallType.Ceiling:
-                        ecb.SetComponent<LocalTransform>(fishEntity, new LocalTransform
-                        {
-                            Position = localTransform.GetRefRW(fishEntity).ValueRW.Position - new float3(0,-10,0),
-                            Rotation = localTransform.GetRefRO(fishEntity).ValueRO.Rotation,
-                            Scale = localTransform.GetRefRO(fishEntity).ValueRO.Scale
-                        });
+                        localTransform.GetRefRW(fishEntity).ValueRW.Position -= new float3(0, localTransform.GetRefRO(fishEntity).ValueRO.Position.y, 0);
                         break;
                     case WallType.Floor:
-                        ecb.SetComponent<LocalTransform>(fishEntity, new LocalTransform
-                        {
-                            Position = localTransform.GetRefRW(fishEntity).ValueRW.Position - new float3(0,10,0),
-                            Rotation = localTransform.GetRefRO(fishEntity).ValueRO.Rotation,
-                            Scale = localTransform.GetRefRO(fishEntity).ValueRO.Scale
-                        });
+                        localTransform.GetRefRW(fishEntity).ValueRW.Position += new float3(0, localTransform.GetRefRO(fishEntity).ValueRO.Position.y, 0);
                         break;
                     case WallType.Left:
-                        ecb.SetComponent<LocalTransform>(fishEntity, new LocalTransform
-                        {
-                            Position = localTransform.GetRefRW(fishEntity).ValueRW.Position - new float3(10,0,0),
-                            Rotation = localTransform.GetRefRO(fishEntity).ValueRO.Rotation,
-                            Scale = localTransform.GetRefRO(fishEntity).ValueRO.Scale
-                        });
+                        localTransform.GetRefRW(fishEntity).ValueRW.Position += new float3(localTransform.GetRefRO(fishEntity).ValueRO.Position.x,0, 0);
                         break;
                     case WallType.Right:
-                        ecb.SetComponent<LocalTransform>(fishEntity, new LocalTransform
-                        {
-                            Position = localTransform.GetRefRW(fishEntity).ValueRW.Position - new float3(-10,0,0),
-                            Rotation = localTransform.GetRefRO(fishEntity).ValueRO.Rotation,
-                            Scale = localTransform.GetRefRO(fishEntity).ValueRO.Scale
-                        });
+                        localTransform.GetRefRW(fishEntity).ValueRW.Position -= new float3(localTransform.GetRefRO(fishEntity).ValueRO.Position.x,0, 0);
                         break;
                     case WallType.Front:
-                        ecb.SetComponent<LocalTransform>(fishEntity, new LocalTransform
-                        {
-                            Position = localTransform.GetRefRW(fishEntity).ValueRW.Position - new float3(0,0,10),
-                            Rotation = localTransform.GetRefRO(fishEntity).ValueRO.Rotation,
-                            Scale = localTransform.GetRefRO(fishEntity).ValueRO.Scale
-                        });
+                        localTransform.GetRefRW(fishEntity).ValueRW.Position += new float3(0,0,localTransform.GetRefRO(fishEntity).ValueRO.Position.z );
                         break;
                     case WallType.Back:
-                        ecb.SetComponent<LocalTransform>(fishEntity, new LocalTransform
-                        {
-                            Position = localTransform.GetRefRW(fishEntity).ValueRW.Position - new float3(0,0,-10),
-                            Rotation = localTransform.GetRefRO(fishEntity).ValueRO.Rotation,
-                            Scale = localTransform.GetRefRO(fishEntity).ValueRO.Scale
-                        });
+                        localTransform.GetRefRW(fishEntity).ValueRW.Position -= new float3(0,0,localTransform.GetRefRO(fishEntity).ValueRO.Position.z );
                         break;
                     default:
                         throw new ArgumentOutOfRangeException();
                 }
+                
+                Debug.Log("After: " + + localTransform.GetRefRO(fishEntity).ValueRO.Position);
             }
         }
     }
