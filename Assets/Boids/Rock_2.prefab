@@ -54,7 +54,7 @@ PrefabInstance:
       objectReference: {fileID: 2100000, guid: 1005d1e29c6b69a45b7f8095b92a0938, type: 2}
     - target: {fileID: 919132149155446097, guid: 816db9143f561504f9a76df724710ca7, type: 3}
       propertyPath: m_Name
-      value: rock 1
+      value: Rock_2
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -66,6 +66,9 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 8164078558771037576, guid: 816db9143f561504f9a76df724710ca7, type: 3}
       insertIndex: -1
       addedObject: {fileID: 5145478908203137277}
+    - targetCorrespondingSourceObject: {fileID: 8164078558771037576, guid: 816db9143f561504f9a76df724710ca7, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 4856262134859580804}
   m_SourcePrefab: {fileID: 100100000, guid: 816db9143f561504f9a76df724710ca7, type: 3}
 --- !u!1 &884578600423722020 stripped
 GameObject:
@@ -120,3 +123,19 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 1.902116, y: 1.850654, z: 2}
   m_Center: {x: 0, y: -0.074673, z: 0}
+--- !u!114 &4856262134859580804
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 884578600423722020}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d1c0beef6bbe7694ca2baff991a1025e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  velocity:
+    x: 0
+    y: 0
+    z: 0
