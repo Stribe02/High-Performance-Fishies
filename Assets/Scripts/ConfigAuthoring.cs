@@ -5,11 +5,14 @@ using UnityEngine;
 class ConfigAuthoring : MonoBehaviour
 {
     public List<GameObject> fishPrefabList;
+    public GameObject rockComponent;
+    public ScheduleType scheduleType;
     public int flockSize;
     public float defaultCohesionWeight = 1f;
     public float defaultSeparationWeight = 1f;
     public float defaultAlignmentWeight = 1f;
     public float defaultSeparationRadius = 2f;
+    public bool shouldSpawnRock = false;
 }
 
 class ConfigAuthoringBaker : Baker<ConfigAuthoring>
@@ -25,18 +28,23 @@ class ConfigAuthoringBaker : Baker<ConfigAuthoring>
         
         var config = new Config
         {
+            RockComponent = GetEntity(authoring.rockComponent, TransformUsageFlags.Dynamic),
+            ScheduleType = authoring.scheduleType,
             FlockSize = authoring.flockSize,
             DefaultCohesionWeight = authoring.defaultCohesionWeight,
             DefaultSeparationWeight = authoring.defaultSeparationWeight,
             DefaultAlignmentWeight = authoring.defaultAlignmentWeight,
             DefaultSeparationRadius = authoring.defaultSeparationRadius
         };
+        AddComponent(entity, new RockSpawning { ShouldSpawnRock = authoring.shouldSpawnRock });
         AddComponent(entity, config);
     }
 }
 
 struct Config : IComponentData
 {
+    public Entity RockComponent;
+    public ScheduleType ScheduleType;
     public int FlockSize;
     public float DefaultCohesionWeight;
     public float DefaultSeparationWeight;
@@ -47,4 +55,15 @@ struct Config : IComponentData
 struct fishPrefabs : IBufferElementData
 {
     public Entity fishPrefab;
+} 
+   
+public enum ScheduleType{
+        Run,
+        Schedule,
+        ScheduleParallel
+}
+
+public struct RockSpawning : IComponentData
+{
+    public bool ShouldSpawnRock;
 }
