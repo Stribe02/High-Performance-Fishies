@@ -1,4 +1,3 @@
-using NUnit.Framework.Constraints;
 using Unity.Burst;
 using Unity.Collections;
 using Unity.Entities;
@@ -41,8 +40,8 @@ partial struct FishSchoolSpawner : ISystem
         
         for (int i = 0; i < fishPrefabs.Length; i++)
         {
-
             var fishSchoolEntity = state.EntityManager.CreateEntity();
+
             state.EntityManager.SetName(fishSchoolEntity, $"FishSchool {i}");
             state.EntityManager.AddComponent<FishSchoolAttribute>(fishSchoolEntity);
             state.EntityManager.AddComponent<ScaredTag>(fishSchoolEntity);
@@ -65,12 +64,8 @@ partial struct FishSchoolSpawner : ISystem
                     FishPrefab = fishPrefabs.ElementAt(i).fishPrefab
                 }
             );
+
             var fishSchoolData = state.EntityManager.GetComponentData<FishSchoolAttribute>(fishSchoolEntity);
-
-
-
-            Color c = UnityEngine.Random.ColorHSV(0f, 1f, 1f, 1f, 0.5f, 1f);
-            var colorc = new float4(c.r, c.g, c.b, c.a);
 
             var fishes = state.EntityManager.Instantiate(fishSchoolData.FishPrefab, fishSchoolData.FlockSize, Allocator.TempJob); //leak?
 
@@ -79,7 +74,10 @@ partial struct FishSchoolSpawner : ISystem
 
             linkedEntityGroupLookup.Update(ref state);
 
-            JobHandle spawnJob = new SpawnFishJob
+            Color c = UnityEngine.Random.ColorHSV(0f, 1f, 1f, 1f, 0.5f, 1f);
+            var colorc = new float4(c.r, c.g, c.b, c.a);
+
+            var spawnJob = new SpawnFishJob
             {
                 ecb = ecb.AsParallelWriter(),
                 fishes = fishes,
@@ -88,15 +86,62 @@ partial struct FishSchoolSpawner : ISystem
                 fishComponents = fishComponents,
                 speed = 2f,
                 schoolIndex = SystemAPI.GetComponentRW<FishSchoolAttribute>(fishSchoolEntity).ValueRW.SchoolIndex
-            }.ScheduleParallel(state.Dependency);
-            spawnJob.Complete();
+            };
+
+            JobHandle spawnHandle = default;
+            switch (config.ScheduleType)
+            {
+                case ScheduleType.Schedule:
+                    spawnHandle = spawnJob.Schedule(state.Dependency);
+                    break;
+                case ScheduleType.ScheduleParallel:
+                    spawnHandle = spawnJob.ScheduleParallel(state.Dependency);
+                    break;
+                case ScheduleType.Run:
+                    state.EntityManager.AddComponent(fishes, fishComponents);
+
+                    var ran = new Unity.Mathematics.Random(((uint)fishSchoolData.SchoolIndex) + 1);
+
+                    foreach (var fish in fishes)
+                    {
+                        state.EntityManager.SetComponentData<FishAttributes>(fish, new FishAttributes
+                        {
+                            SchoolIndex = fishSchoolData.SchoolIndex,
+                            Velocity = ran.NextFloat3(0, 1) * 2f
+                        });
+                        state.EntityManager.SetComponentData<AquaticAnimalAttributes>(fish, new AquaticAnimalAttributes
+                        {
+                            Speed = 2f,
+                            Radius = state.EntityManager.GetComponentData<AquaticAnimalAttributes>(fish).Radius
+                        });
+                        state.EntityManager.SetComponentData<LocalTransform>(fish, new LocalTransform
+                        {
+                            Position = ran.NextFloat3(-10, 10),
+                            Rotation = state.EntityManager.GetComponentData<LocalTransform>(fish).Rotation,
+                            Scale = state.EntityManager.GetComponentData<LocalTransform>(fish).Scale
+                        });
+
+                        linkedEntityGroupLookup.Update(ref state);
+                        linkedEntityGroupLookup.TryGetBuffer(fish, out DynamicBuffer<LinkedEntityGroup> linkedEnts);
+
+                        foreach (var ent in linkedEnts)
+                        {
+                            ecb.SetComponent<URPMaterialPropertyBaseColor>(ent.Value, new URPMaterialPropertyBaseColor { Value = colorc });
+                        }
+                    }
+
+                    fishPrefabsLookup.Update(ref state);
+                    fishPrefabsLookup.TryGetBuffer(SystemAPI.GetSingletonEntity<Config>(), out fishPrefabs);
+
+                    break;
+                default:
+                    break;
+            }
+            spawnHandle.Complete();
 
             fishes.Dispose();
         }
-
-
         
-
     }
 
     [BurstCompile]

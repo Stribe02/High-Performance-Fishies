@@ -1,6 +1,7 @@
 using Unity.Burst;
 using Unity.Collections;
 using Unity.Entities;
+using Unity.Jobs;
 using Unity.Mathematics;
 using Unity.Transforms;
 
@@ -12,23 +13,57 @@ using Random = UnityEngine.Random;
 partial struct PredatorMovementSystem : ISystem
 {
     float3 targetPos;
+    float3 targetPosRun;
 
     [BurstCompile]
     public void OnUpdate(ref SystemState state)
     {
+        var config = SystemAPI.GetSingleton<Config>();
+
         NativeArray<float3> targetPosResult = new NativeArray<float3>(1, Allocator.TempJob);
         targetPosResult[0] = targetPos;
-        var jobHandle = new PredatorMoveJob
+        var predatorMoveJob = new PredatorMoveJob
         {
             targetPos = targetPosResult,
             dt = Time.deltaTime,
             randomVector = new float3(Random.Range(-100, 100), Random.Range(-100, 100), Random.Range(-100, 100))
-        }.Schedule(state.Dependency);
-        
-        jobHandle.Complete();
+        };
+
+        JobHandle predatorMoveHandle = default;
+        switch (config.ScheduleType)
+        {
+            case ScheduleType.Schedule:
+                predatorMoveHandle = predatorMoveJob.Schedule(state.Dependency);
+                break;
+            case ScheduleType.ScheduleParallel:
+                predatorMoveHandle = predatorMoveJob.ScheduleParallel(state.Dependency);
+                break;
+            case ScheduleType.Run: 
+                foreach (var (transform, entity) in SystemAPI.Query<RefRW<LocalTransform>>().WithAll<PredatorTag>().WithEntityAccess())
+                {
+                    float3 dir = math.normalize(targetPosRun - new float3(transform.ValueRW.Position.x, transform.ValueRW.Position.y, transform.ValueRW.Position.z));
+
+                    if (!dir.Equals(float3.zero))
+                    {
+                        quaternion rot = quaternion.LookRotation(dir, new float3(0, 1, 0));
+                        transform.ValueRW.Rotation = math.slerp(transform.ValueRW.Rotation, rot, 2f * Time.deltaTime);
+                    }
+
+                    transform.ValueRW.Position += transform.ValueRW.Forward() * 15f * Time.deltaTime;
+
+                    if (math.distance(transform.ValueRW.Position, targetPosRun) < 5f)
+                    {
+                        targetPosRun = new float3(Random.Range(-100, 100), Random.Range(-100, 100), Random.Range(-100, 100));
+                    }
+                }
+                break;
+            default:
+                break;
+        }
+        predatorMoveHandle.Complete();
+
         targetPos = targetPosResult[0];
         targetPosResult.Dispose();
-
     }
 
     [WithAll(typeof(PredatorTag))]

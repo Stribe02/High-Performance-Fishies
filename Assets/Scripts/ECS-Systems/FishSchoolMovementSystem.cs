@@ -1,3 +1,4 @@
+using System.IO;
 using Unity.Burst;
 using Unity.Collections;
 using Unity.Entities;
@@ -43,66 +44,90 @@ partial struct FishSchoolMovementSystem : ISystem
                 float3 fishPosition = state.EntityManager.GetComponentData<LocalTransform>(fish.Fish).Position;
 
                 
-            /* Cohesion Job */
-            NativeArray<float3> centerOfMass = new NativeArray<float3>(1, Allocator.TempJob);
-            NativeArray<int> cohesionCount = new NativeArray<int>(1, Allocator.TempJob);
+                /* Cohesion Job */
+                NativeArray<float3> centerOfMass = new NativeArray<float3>(1, Allocator.TempJob);
+                NativeArray<int> cohesionCount = new NativeArray<int>(1, Allocator.TempJob);
 
-            CohesionJob cohesionJob = new CohesionJob
-            {
-                fishEntity = fish.Fish,
-                centerOfMass = centerOfMass,
-                cohesionCount = cohesionCount,
-                schoolIndex = fishSchoolAttribute.ValueRO.SchoolIndex
-            };
+                CohesionJob cohesionJob = new CohesionJob
+                {
+                    fishEntity = fish.Fish,
+                    centerOfMass = centerOfMass,
+                    cohesionCount = cohesionCount,
+                    schoolIndex = fishSchoolAttribute.ValueRO.SchoolIndex
+                };
 
-            JobHandle cohesionHandle = default;
-            switch (config.ScheduleType)
-            {
-                case ScheduleType.Schedule:
-                    cohesionHandle = cohesionJob.Schedule(state.Dependency);
-                    break;
-                case ScheduleType.ScheduleParallel:
-                    cohesionHandle = cohesionJob.ScheduleParallel(state.Dependency);
-                    break;
-                case ScheduleType.Run:
-                    //cohesionHandle = cohesionJob.Run();
-                    break;
-                default:
-                    break;
-            }
+                JobHandle cohesionHandle = default;
+                switch (config.ScheduleType)
+                {
+                    case ScheduleType.Schedule:
+                        cohesionHandle = cohesionJob.Schedule(state.Dependency);
+                        break;
+                    case ScheduleType.ScheduleParallel:
+                        cohesionHandle = cohesionJob.ScheduleParallel(state.Dependency);
+                        break;
+                    case ScheduleType.Run:
+                        cohesionHandle = cohesionJob.ScheduleParallel(state.Dependency);
+                        //foreach (var schoolfish in schoolBuffer)
+                        //{
+                        //    if (state.EntityManager.GetComponentData<FishAttributes>(schoolfish.Fish).SchoolIndex == state.EntityManager.GetComponentData<FishSchoolAttribute>(fishSchool).SchoolIndex && !schoolfish.Fish.Equals(schoolfish))
+                        //    {
+                        //        var pos = new float3(state.EntityManager.GetComponentData<LocalTransform>(schoolfish.Fish).Position.x, state.EntityManager.GetComponentData<LocalTransform>(schoolfish.Fish).Position.y,
+                        //            state.EntityManager.GetComponentData<LocalTransform>(schoolfish.Fish).Position.z);
+                        //        centerOfMass[0] += pos;
+                        //        cohesionCount[0]++;
+                        //    }
+                        //}
+                        break;
+                    default:
+                        break;
+                }
             
-            /* Seperation Job */
-            NativeArray<float3> moveAway = new NativeArray<float3>(1, Allocator.TempJob);
-            NativeArray<int> seperationCount = new NativeArray<int>(1, Allocator.TempJob);
+                /* Seperation Job */
+                NativeArray<float3> moveAway = new NativeArray<float3>(1, Allocator.TempJob);
+                NativeArray<int> seperationCount = new NativeArray<int>(1, Allocator.TempJob);
 
 
-            SeparationJob separationJob = new SeparationJob
-            {
-                fishEntity = fish.Fish,
-                fishEntityTransform = fishPosition,
-                moveAway = moveAway,
-                seperationCount = seperationCount,
-                schoolIndex = fishSchoolAttribute.ValueRO.SchoolIndex,
-                seperationRadius = fishSchoolAttribute.ValueRO.SeparationRadius
-            };
+                SeparationJob separationJob = new SeparationJob
+                {
+                    fishEntity = fish.Fish,
+                    fishEntityTransform = fishPosition,
+                    moveAway = moveAway,
+                    seperationCount = seperationCount,
+                    schoolIndex = fishSchoolAttribute.ValueRO.SchoolIndex,
+                    seperationRadius = fishSchoolAttribute.ValueRO.SeparationRadius
+                };
             
-            JobHandle separationHandle = default;
-            switch (config.ScheduleType)
-            {
-                case ScheduleType.Schedule:
-                    separationHandle = separationJob.Schedule(state.Dependency);
-                    break;
-                case ScheduleType.ScheduleParallel:
-                    separationHandle = separationJob.ScheduleParallel(state.Dependency);
-                    break;
-                case ScheduleType.Run:
-                    //separationHandle = separationJob.Run();
-                    break;
-                default:
-                    break;
-            }
+                JobHandle separationHandle = default;
+                switch (config.ScheduleType)
+                {
+                    case ScheduleType.Schedule:
+                        separationHandle = separationJob.Schedule(state.Dependency);
+                        break;
+                    case ScheduleType.ScheduleParallel:
+                        separationHandle = separationJob.ScheduleParallel(state.Dependency);
+                        break;
+                    case ScheduleType.Run:
+                        separationHandle = separationJob.ScheduleParallel(state.Dependency);
+                        //foreach (var schoolfish in schoolBuffer)
+                        //{
+                        //    if (!schoolfish.Fish.Equals(schoolfish) && (state.EntityManager.GetComponentData<FishAttributes>(schoolfish.Fish).SchoolIndex == state.EntityManager.GetComponentData<FishSchoolAttribute>(fishSchool).SchoolIndex
+                        //                 && (math.distance(state.EntityManager.GetComponentData<LocalTransform>(schoolfish.Fish).Position,
+                        //                     new float3(state.EntityManager.GetComponentData<LocalTransform>(schoolfish.Fish).Position.x,
+                        //                         state.EntityManager.GetComponentData<LocalTransform>(schoolfish.Fish).Position.y,
+                        //                         state.EntityManager.GetComponentData<LocalTransform>(schoolfish.Fish).Position.z)) < state.EntityManager.GetComponentData<FishSchoolAttribute>(fishSchool).SeparationRadius)))
+                        //    {
+                        //        float3 difference = state.EntityManager.GetComponentData<LocalTransform>(schoolfish.Fish).Position - new float3(state.EntityManager.GetComponentData<LocalTransform>(schoolfish.Fish).Position.x,
+                        //            state.EntityManager.GetComponentData<LocalTransform>(schoolfish.Fish).Position.y, state.EntityManager.GetComponentData<LocalTransform>(schoolfish.Fish).Position.z);
+                        //        moveAway[0] += math.normalize(difference) / math.length(difference); // something with scaling
+                        //        seperationCount[0]++;
+                        //    }
+                        //}
+                        break;
+                    default:
+                        break;
+                }
             
-            /* AlignmentJob: */
+                /* AlignmentJob: */
 
                 NativeArray<float3> averageVelocity = new NativeArray<float3>(1, Allocator.TempJob);
                 NativeArray<int> alignmentCount = new NativeArray<int>(1, Allocator.TempJob);
@@ -123,12 +148,21 @@ partial struct FishSchoolMovementSystem : ISystem
                         alignmentHandle = alignmentJob.ScheduleParallel(state.Dependency);
                         break;
                     case ScheduleType.Run:
-                        //alignmentHandle = alignmentJob.Run();
+                        alignmentHandle = alignmentJob.ScheduleParallel(state.Dependency);
+                        //foreach (var schoolfish in schoolBuffer)
+                        //{
+                        //    if (state.EntityManager.GetComponentData<FishAttributes>(schoolfish.Fish).SchoolIndex == state.EntityManager.GetComponentData<FishSchoolAttribute>(fishSchool).SchoolIndex)
+                        //    {
+                        //        averageVelocity[0] += new float3(state.EntityManager.GetComponentData<LocalTransform>(schoolfish.Fish).Position.x, state.EntityManager.GetComponentData<LocalTransform>(schoolfish.Fish).Position.y,
+                        //            state.EntityManager.GetComponentData<LocalTransform>(schoolfish.Fish).Position.z);
+                        //        alignmentCount[0]++;
+                        //    }
+                        //}
                         break;
                     default:
                         break;
                 }
-                
+
                 // make sure the jobs are completed
                 // yoink the values from job
                 cohesionHandle.Complete();
@@ -160,12 +194,7 @@ partial struct FishSchoolMovementSystem : ISystem
                 var aquaData = state.EntityManager.GetComponentData<AquaticAnimalAttributes>(fish.Fish);
                 fishData.Velocity += cohesion + separation + alignment;
                 
-                fishData.Velocity = clampLength(fishData.Velocity,
-                    aquaData.Speed);
-                
-                
-                
-            
+                fishData.Velocity = clampLength(fishData.Velocity, aquaData.Speed);
                 
                 fishPosition += fishData.Velocity * SystemAPI.Time.DeltaTime;
                 fishRotation = quaternion.LookRotation(fishData.Velocity, new float3(0,1,0)); // look up?
