@@ -1,11 +1,12 @@
 using Unity.Entities;
+using Unity.Mathematics;
 using UnityEngine;
 
 class AquaticAnimalAttributesAuthoring : MonoBehaviour
 {
     public float speed;
     public float radius;
-    public Vector3 velocity;
+    public float3 velocity;
 }
 
 class Baker : Baker<AquaticAnimalAttributesAuthoring>
