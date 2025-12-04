@@ -8,6 +8,7 @@ class ConfigAuthoring : MonoBehaviour
     public GameObject tallFish;
     public GameObject longFish;
     public GameObject rockComponent;
+    public ScheduleType scheduleType;
     public int numberOfSchools;
     public int flockSize;
     public float defaultCohesionWeight = 1f;
@@ -28,6 +29,7 @@ class ConfigAuthoringBaker : Baker<ConfigAuthoring>
             TallFish = GetEntity(authoring.tallFish, TransformUsageFlags.Dynamic),
             LongFish = GetEntity(authoring.longFish, TransformUsageFlags.Dynamic),
             RockComponent = GetEntity(authoring.rockComponent, TransformUsageFlags.Dynamic),
+            ScheduleType = authoring.scheduleType,
             NumberOfSchools = authoring.numberOfSchools,
             FlockSize = authoring.flockSize,
             DefaultCohesionWeight = authoring.defaultCohesionWeight,
@@ -46,12 +48,19 @@ struct Config : IComponentData
     public Entity TallFish;
     public Entity LongFish;
     public Entity RockComponent;
+    public ScheduleType ScheduleType;
     public int NumberOfSchools;
     public int FlockSize;
     public float DefaultCohesionWeight;
     public float DefaultSeparationWeight;
     public float DefaultAlignmentWeight;
     public float DefaultSeparationRadius;
+}
+
+public enum ScheduleType{
+    Run,
+    Schedule,
+    ScheduleParallel
 }
 
 public struct RockSpawning : IComponentData

@@ -11,20 +11,17 @@ public class SpawnRockUI : MonoBehaviour
     private IEnumerator Start()
     {
         _entityManager = World.DefaultGameObjectInjectionWorld.EntityManager;
-        // wait so the ECB has loaded: "hacky"
+        // wait in case the ECB stuff hasn't loaded:
         yield return new WaitForSeconds(0.4f);
-        configEntity = _entityManager.CreateEntityQuery(typeof(Config)).GetSingletonEntity(); // get config ref
-        
-        
+        // get config ref
+        configEntity = _entityManager.CreateEntityQuery(typeof(Config)).GetSingletonEntity(); 
     }
 
 
-    public void onRockClick(bool state)
+    public void onRockClick()
     {
-        state = !state;
-        Debug.Log("I am being clicked!");
         var config = _entityManager.GetComponentData<Config>(configEntity);
-        _entityManager.SetComponentData<RockSpawning>(configEntity, new RockSpawning {ShouldSpawnRock = state});
+        _entityManager.SetComponentData<RockSpawning>(configEntity, new RockSpawning {ShouldSpawnRock = true});
     }
 
 }

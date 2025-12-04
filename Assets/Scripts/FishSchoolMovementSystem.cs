@@ -16,9 +16,9 @@ partial struct FishSchoolMovementSystem : ISystem
     {
         state.RequireForUpdate<BeginSimulationEntityCommandBufferSystem.Singleton
         >();
-
+        state.RequireForUpdate<Config>();
         schoolFishesLookup = state.GetBufferLookup<SchoolFishes>();
-
+        
     }
 
    
@@ -28,6 +28,9 @@ partial struct FishSchoolMovementSystem : ISystem
         var ecb =
             SystemAPI.GetSingleton<BeginSimulationEntityCommandBufferSystem.Singleton
             >().CreateCommandBuffer(state.WorldUnmanaged);
+        
+        var config = SystemAPI.GetSingleton<Config>();
+
 
         // should loop through the different school the cohesion etc. methods needs to loop through the fish of the school they get
         foreach (var (fishSchoolAttribute, fishBuffer, fishSchool) in SystemAPI.Query<RefRW<FishSchoolAttribute>, DynamicBuffer<SchoolFishes>>().WithEntityAccess())
@@ -38,9 +41,11 @@ partial struct FishSchoolMovementSystem : ISystem
             {
                 float3 fishPosition = state.EntityManager.GetComponentData<LocalTransform>(fish.Fish).Position;
 
+                
             /* Cohesion Job */
             NativeArray<float3> centerOfMass = new NativeArray<float3>(1, Allocator.TempJob);
             NativeArray<int> cohesionCount = new NativeArray<int>(1, Allocator.TempJob);
+
             CohesionJob cohesionJob = new CohesionJob
             {
                 fishEntity = fish.Fish,
@@ -48,8 +53,22 @@ partial struct FishSchoolMovementSystem : ISystem
                 cohesionCount = cohesionCount,
                 schoolIndex = fishSchoolAttribute.ValueRO.SchoolIndex
             };
-            var cohesionHandle = cohesionJob.Schedule(state.Dependency);
-            
+
+            JobHandle cohesionHandle = default;
+            switch (config.ScheduleType)
+            {
+                case ScheduleType.Schedule:
+                    cohesionHandle = cohesionJob.Schedule(state.Dependency);
+                    break;
+                case ScheduleType.ScheduleParallel:
+                    cohesionHandle = cohesionJob.ScheduleParallel(state.Dependency);
+                    break;
+                case ScheduleType.Run:
+                    //cohesionHandle = cohesionJob.Run();
+                    break;
+                default:
+                    break;
+            }
             
             /* Seperation Job */
             NativeArray<float3> moveAway = new NativeArray<float3>(1, Allocator.TempJob);
@@ -65,7 +84,22 @@ partial struct FishSchoolMovementSystem : ISystem
                 schoolIndex = fishSchoolAttribute.ValueRO.SchoolIndex,
                 seperationRadius = fishSchoolAttribute.ValueRO.SeparationRadius
             };
-            var separationHandle = separationJob.Schedule(state.Dependency);
+            
+            JobHandle separationHandle = default;
+            switch (config.ScheduleType)
+            {
+                case ScheduleType.Schedule:
+                    separationHandle = separationJob.Schedule(state.Dependency);
+                    break;
+                case ScheduleType.ScheduleParallel:
+                    separationHandle = separationJob.ScheduleParallel(state.Dependency);
+                    break;
+                case ScheduleType.Run:
+                    //separationHandle = separationJob.Run();
+                    break;
+                default:
+                    break;
+            }
             
             /* AlignmentJob: */
 
@@ -77,26 +111,37 @@ partial struct FishSchoolMovementSystem : ISystem
                     count = alignmentCount,
                     schoolIndex = fishSchoolAttribute.ValueRO.SchoolIndex
                 };
+
+                JobHandle alignmentHandle = default;
+                switch (config.ScheduleType)
+                {
+                    case ScheduleType.Schedule:
+                        alignmentHandle = alignmentJob.Schedule(state.Dependency);
+                        break;
+                    case ScheduleType.ScheduleParallel:
+                        alignmentHandle = alignmentJob.ScheduleParallel(state.Dependency);
+                        break;
+                    case ScheduleType.Run:
+                        //alignmentHandle = alignmentJob.Run();
+                        break;
+                    default:
+                        break;
+                }
                 
-                JobHandle jobHandle = alignmentJob.Schedule(state.Dependency);
                 // make sure the jobs are completed
-               
                 // yoink the values from job
                 cohesionHandle.Complete();
-                jobHandle.Complete();
-                float3 cohesion = math.normalize((centerOfMass[0] / cohesionCount[0]) - fishPosition) * fishSchoolAttribute.ValueRO.CohesionWeight;
-                
-                
+                alignmentHandle.Complete();
                 separationHandle.Complete();
                 if (seperationCount[0] > 0)
                 {
                     moveAway[0] /= seperationCount[0];
                 }
+                
+                float3 cohesion = math.normalize((centerOfMass[0] / cohesionCount[0]) - fishPosition) * fishSchoolAttribute.ValueRO.CohesionWeight;
 
                 float3 separation = seperationCount[0] > 0 ?  math.normalize(moveAway[0] / seperationCount[0]) * fishSchoolAttribute.ValueRO.SeparationWeight : float3.zero;
-                //Separation(ref state, fish.Fish, schoolBuffer, fishPosition, fishSchoolAttribute.ValueRO.SchoolIndex, fishSchoolAttribute.ValueRO.SeparationRadius);//math.normalize(moveAway[0] /= seperationCount[0]) * fishSchoolAttribute.ValueRO.SeparationWeight;
                 
-               
                 float3 alignment = math.normalize(averageVelocity[0] /= alignmentCount[0]-1) * fishSchoolAttribute.ValueRO.AlignmentWeight;
 
                 
@@ -162,7 +207,7 @@ partial struct FishSchoolMovementSystem : ISystem
     }
     
     
-
+    [BurstCompile]
     public partial struct SeparationJob : IJobEntity
     {
         [NativeDisableParallelForRestriction]
@@ -190,38 +235,6 @@ partial struct FishSchoolMovementSystem : ISystem
         }
     }
     
-    // Rule 2:
-
-    public float3 Separation(ref SystemState state, Entity fishEntity, DynamicBuffer<SchoolFishes> schoolFishes,
-        float3 fishEntityTransform, int schoolIndex, float seperationRadius)
-    {
-        float3 moveAway = float3.zero;
-        int seperationCount = 0;
-        
-        
-        foreach (var (fishTransform, fishAttributes ,fish) in SystemAPI.Query<RefRO<LocalTransform>, RefRO<FishAttributes>>()
-                     .WithEntityAccess())
-        {
-            
-            if (!fishEntity.Equals(fish) && fishAttributes.ValueRO.SchoolIndex == schoolIndex
-                                         && math.distance(fishEntityTransform,
-                                             new float3(fishTransform.ValueRO.Position.x,
-                                                 fishTransform.ValueRO.Position.y,
-                                                 fishTransform.ValueRO.Position.z)) < seperationRadius)
-            {
-                float3 difference = fishEntityTransform - new float3(fishTransform.ValueRO.Position.x,
-                    fishTransform.ValueRO.Position.y, fishTransform.ValueRO.Position.z);
-                moveAway += math.normalize(difference) / math.length(difference); // something with scaling
-                seperationCount++;
-            }
-        }
-        if (seperationCount > 0)
-        {
-            moveAway /= seperationCount;
-        }
-        return moveAway.Equals(float3.zero) ? float3.zero : math.normalize(moveAway);
-    }
-    
     [BurstCompile]
     public partial struct AlignmentJob : IJobEntity
     {
@@ -241,7 +254,7 @@ partial struct FishSchoolMovementSystem : ISystem
             }
         }
     }
-
+    // should be similar to vector3 clampMagnitude
     public float3 clampLength(float3 floaty, float maxLength)
     {
         if (math.lengthsq(floaty) > maxLength * maxLength)

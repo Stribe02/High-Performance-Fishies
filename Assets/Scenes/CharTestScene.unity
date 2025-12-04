@@ -205,7 +205,7 @@ MonoBehaviour:
       - m_Target: {fileID: 1234523947}
         m_TargetAssemblyTypeName: SpawnRockUI, Assembly-CSharp
         m_MethodName: onRockClick
-        m_Mode: 6
+        m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
           m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
