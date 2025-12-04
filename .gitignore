@@ -101,3 +101,6 @@ InitTestScene*.unity*
 /.vsconfig
 /Assets/Profiler Snapshots
 /ProfileAnalyzer
+
+# Stupid Rider shit
+/Assets/Scripts/.idea
