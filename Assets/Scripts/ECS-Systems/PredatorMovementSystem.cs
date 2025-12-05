@@ -4,8 +4,6 @@ using Unity.Entities;
 using Unity.Jobs;
 using Unity.Mathematics;
 using Unity.Transforms;
-
-//currently only used for random.range, should be replaced when optimizing
 using UnityEngine;
 using Random = UnityEngine.Random;
 
