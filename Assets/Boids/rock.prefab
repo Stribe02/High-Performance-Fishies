@@ -54,7 +54,7 @@ PrefabInstance:
       objectReference: {fileID: 2100000, guid: 1005d1e29c6b69a45b7f8095b92a0938, type: 2}
     - target: {fileID: 919132149155446097, guid: 20c30c02b8b61d143b1a5ff77576abab, type: 3}
       propertyPath: m_Name
-      value: Rock
+      value: rock
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []

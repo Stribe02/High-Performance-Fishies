@@ -5,8 +5,7 @@ using Unity.Physics.Systems;
 using Unity.Transforms;
 using UnityEngine;
 
-[UpdateBefore(typeof(PhysicsSimulationGroup))]
-[UpdateInGroup(typeof(FixedStepSimulationSystemGroup))]
+
 partial struct RockSpawnSystem : ISystem
 {
     public float time;

@@ -17,6 +17,7 @@ class FishBaker : Baker<FishAttributesAuthoring>
         {
             Velocity = authoring.velocity,
             SchoolIndex = authoring.schoolIndex,
+            CollisionAdjust = new float3()
         };
         AddComponent(entity, fishPrefab);
     }
@@ -26,7 +27,7 @@ public struct FishAttributes : IComponentData
 {
     public float3 Velocity;
     public int SchoolIndex;
-    //public Entity FishPrefab;
+    public float3 CollisionAdjust;
 }
 
 public struct FishPrefab : IComponentData
