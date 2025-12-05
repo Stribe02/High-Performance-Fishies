@@ -153,7 +153,7 @@ MonoBehaviour:
   - {fileID: 5578838254241686288, guid: a098ae37346453e46859ef8247c1dc93, type: 3}
   - {fileID: 8856548824803852618, guid: fb05bb949de498940bf301c022f5461c, type: 3}
   rockComponent: {fileID: 7566705128525377493, guid: f9e63cc6cd5c18d4e9cb6f7b871ba0bf, type: 3}
-  scheduleType: 1
+  scheduleType: 0
   flockSize: 20
   defaultCohesionWeight: 1
   defaultSeparationWeight: 1
@@ -336,6 +336,22 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: 318267450272265400, guid: 84400e479cbfe0540b6c1b26a77322c7, type: 3}
+      propertyPath: m_ProvidesContacts
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 487134946375313109, guid: 84400e479cbfe0540b6c1b26a77322c7, type: 3}
+      propertyPath: m_ProvidesContacts
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 1534744298439913883, guid: 84400e479cbfe0540b6c1b26a77322c7, type: 3}
+      propertyPath: m_ProvidesContacts
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 2766270267268482506, guid: 84400e479cbfe0540b6c1b26a77322c7, type: 3}
+      propertyPath: m_ProvidesContacts
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 3903785693981964840, guid: 84400e479cbfe0540b6c1b26a77322c7, type: 3}
       propertyPath: m_LocalPosition.x
       value: 53.6
@@ -376,9 +392,13 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 5182955727301644175, guid: 84400e479cbfe0540b6c1b26a77322c7, type: 3}
-      propertyPath: m_LocalPosition.z
-      value: -78.3
+    - target: {fileID: 5783673563155650571, guid: 84400e479cbfe0540b6c1b26a77322c7, type: 3}
+      propertyPath: m_ProvidesContacts
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 7755871155664997351, guid: 84400e479cbfe0540b6c1b26a77322c7, type: 3}
+      propertyPath: m_ProvidesContacts
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 8849346201185164837, guid: 84400e479cbfe0540b6c1b26a77322c7, type: 3}
       propertyPath: m_Name
@@ -407,7 +427,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!135 &2133909338
 SphereCollider:
   m_ObjectHideFlags: 0

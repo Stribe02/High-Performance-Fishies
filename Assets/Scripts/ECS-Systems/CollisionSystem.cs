@@ -4,9 +4,12 @@ using Unity.Collections;
 using Unity.Entities;
 using Unity.Mathematics;
 using Unity.Physics;
+using Unity.Physics.Systems;
 using Unity.Transforms;
 using UnityEngine;
 
+[UpdateBefore(typeof(PhysicsSimulationGroup))]
+[UpdateInGroup(typeof(FixedStepSimulationSystemGroup))]
 partial struct CollisionSystem : ISystem
 {
     //TODO ADD BURSTCOMPILE BACK
@@ -128,33 +131,29 @@ partial struct CollisionSystem : ISystem
                  * If fish hit Front: z coord too low, opposite for Back
                  */
                 WallType wallType = wall.GetRefRO(wallEntity).ValueRO.WType;
-                Debug.Log("Before: " + localTransform.GetRefRO(fishEntity).ValueRO.Position);
-                //float3 localPos = this.localTransform.GetRefRW(fishEntity).ValueRW.Position
                 switch (wallType)
                 {
                     case WallType.Ceiling:
-                        localTransform.GetRefRW(fishEntity).ValueRW.Position -= new float3(0, localTransform.GetRefRO(fishEntity).ValueRO.Position.y, 0);
+                        fish.GetRefRW(fishEntity).ValueRW.CollisionAdjust = new float3(0,localTransform.GetRefRO(fishEntity).ValueRO.Position.y * -1,0);    
                         break;
                     case WallType.Floor:
-                        localTransform.GetRefRW(fishEntity).ValueRW.Position += new float3(0, localTransform.GetRefRO(fishEntity).ValueRO.Position.y, 0);
+                        fish.GetRefRW(fishEntity).ValueRW.CollisionAdjust = new float3(0,40,0); 
                         break;
                     case WallType.Left:
-                        localTransform.GetRefRW(fishEntity).ValueRW.Position += new float3(localTransform.GetRefRO(fishEntity).ValueRO.Position.x,0, 0);
+                        fish.GetRefRW(fishEntity).ValueRW.CollisionAdjust = new float3(40,0,0);    
                         break;
                     case WallType.Right:
-                        localTransform.GetRefRW(fishEntity).ValueRW.Position -= new float3(localTransform.GetRefRO(fishEntity).ValueRO.Position.x,0, 0);
+                        fish.GetRefRW(fishEntity).ValueRW.CollisionAdjust = new float3(-40,0,0);    
                         break;
                     case WallType.Front:
-                        localTransform.GetRefRW(fishEntity).ValueRW.Position += new float3(0,0,localTransform.GetRefRO(fishEntity).ValueRO.Position.z );
+                        fish.GetRefRW(fishEntity).ValueRW.CollisionAdjust = new float3(0,0,-40);    
                         break;
                     case WallType.Back:
-                        localTransform.GetRefRW(fishEntity).ValueRW.Position -= new float3(0,0,localTransform.GetRefRO(fishEntity).ValueRO.Position.z );
+                        fish.GetRefRW(fishEntity).ValueRW.CollisionAdjust = new float3(0,0,40);    
                         break;
                     default:
                         throw new ArgumentOutOfRangeException();
                 }
-                
-                Debug.Log("After: " + + localTransform.GetRefRO(fishEntity).ValueRO.Position);
             }
         }
     }
