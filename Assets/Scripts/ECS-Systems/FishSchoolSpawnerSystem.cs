@@ -27,7 +27,7 @@ partial struct FishSchoolSpawner : ISystem
         fishComponents = new ComponentTypeSet(ComponentType.ReadWrite<FishAttributes>(), ComponentType.ReadWrite<AquaticAnimalAttributes>(), ComponentType.ReadWrite<LocalTransform>());
     }
 
-    //[BurstCompile]
+    [BurstCompile]
     public void OnUpdate(ref SystemState state)
     {
         state.Enabled = false;
@@ -102,34 +102,36 @@ partial struct FishSchoolSpawner : ISystem
 
                     var ran = new Unity.Mathematics.Random(((uint)fishSchoolData.SchoolIndex) + 1);
 
-                    foreach (var fish in fishes)
+                    foreach (var (fishAttribute, aquaticAttribute, transform, fish) in SystemAPI.Query<RefRW<FishAttributes>, RefRW<AquaticAnimalAttributes>, RefRW<LocalTransform>>().WithEntityAccess())
                     {
-                        state.EntityManager.SetComponentData<FishAttributes>(fish, new FishAttributes
+                        if (fishAttribute.ValueRW.SchoolIndex == fishSchoolData.SchoolIndex)
                         {
-                            SchoolIndex = fishSchoolData.SchoolIndex,
-                            Velocity = ran.NextFloat3(0, 1) * 2f
-                        });
-                        state.EntityManager.SetComponentData<AquaticAnimalAttributes>(fish, new AquaticAnimalAttributes
-                        {
-                            Speed = 2f,
-                            Radius = state.EntityManager.GetComponentData<AquaticAnimalAttributes>(fish).Radius
-                        });
-                        state.EntityManager.SetComponentData<LocalTransform>(fish, new LocalTransform
-                        {
-                            Position = ran.NextFloat3(-10, 10),
-                            Rotation = state.EntityManager.GetComponentData<LocalTransform>(fish).Rotation,
-                            Scale = state.EntityManager.GetComponentData<LocalTransform>(fish).Scale
-                        });
+                            state.EntityManager.SetComponentData<FishAttributes>(fish, new FishAttributes
+                            {
+                                SchoolIndex = fishSchoolData.SchoolIndex,
+                                Velocity = ran.NextFloat3(0, 1) * 2f
+                            });
+                            state.EntityManager.SetComponentData<AquaticAnimalAttributes>(fish, new AquaticAnimalAttributes
+                            {
+                                Speed = 2f,
+                                Radius = aquaticAttribute.ValueRO.Radius
+                            });
+                            state.EntityManager.SetComponentData<LocalTransform>(fish, new LocalTransform
+                            {
+                                Position = ran.NextFloat3(-10, 10),
+                                Rotation = transform.ValueRO.Rotation,
+                                Scale = transform.ValueRO.Scale
+                            });
 
-                        linkedEntityGroupLookup.Update(ref state);
-                        linkedEntityGroupLookup.TryGetBuffer(fish, out DynamicBuffer<LinkedEntityGroup> linkedEnts);
+                            linkedEntityGroupLookup.Update(ref state);
+                            linkedEntityGroupLookup.TryGetBuffer(fish, out DynamicBuffer<LinkedEntityGroup> linkedEnts);
 
-                        foreach (var ent in linkedEnts)
-                        {
-                            ecb.SetComponent<URPMaterialPropertyBaseColor>(ent.Value, new URPMaterialPropertyBaseColor { Value = colorc });
-                        }
+                            foreach (var ent in linkedEnts)
+                            {
+                                ecb.SetComponent<URPMaterialPropertyBaseColor>(ent.Value, new URPMaterialPropertyBaseColor { Value = colorc });
+                            }
+                        } 
                     }
-
                     fishPrefabsLookup.Update(ref state);
                     fishPrefabsLookup.TryGetBuffer(SystemAPI.GetSingletonEntity<Config>(), out fishPrefabs);
 
@@ -141,7 +143,6 @@ partial struct FishSchoolSpawner : ISystem
 
             fishes.Dispose();
         }
-        
     }
 
     [BurstCompile]
@@ -188,7 +189,6 @@ partial struct FishSchoolSpawner : ISystem
             }
         }
     }
-
  }
 
 
