@@ -8,31 +8,31 @@ using Unity.Physics.Systems;
 using Unity.Transforms;
 using UnityEngine;
 
-[UpdateBefore(typeof(PhysicsSimulationGroup))]
+//[UpdateBefore(typeof(PhysicsSimulationGroup))]
 [UpdateInGroup(typeof(FixedStepSimulationSystemGroup))]
 partial struct CollisionSystem : ISystem
 {
-    //TODO ADD BURSTCOMPILE BACK
+    
     ComponentLookup<RockComponent> RockComponentLookup;
-    ComponentLookup<Wall> wallLookup;
+    ComponentLookup<WallTag> wallLookup;
     ComponentLookup<FishAttributes> fishLookup;
     ComponentLookup<LocalTransform> localTransformUp;
     
-    
+    [BurstCompile]
     public void OnCreate(ref SystemState state)
     {
         state.RequireForUpdate<SimulationSingleton>();
         state.RequireForUpdate<PhysicsWorldSingleton>();
+        state.RequireForUpdate<Config>();
         RockComponentLookup = state.GetComponentLookup<RockComponent>();
-        wallLookup = state.GetComponentLookup<Wall>(true);
+        wallLookup = state.GetComponentLookup<WallTag>(true);
         fishLookup = state.GetComponentLookup<FishAttributes>();
         localTransformUp = state.GetComponentLookup<LocalTransform>();
     }
 
-    
+    [BurstCompile]
     public void OnUpdate(ref SystemState state)
     {
-        
         RockComponentLookup.Update(ref state);
         wallLookup.Update(ref state);
         fishLookup.Update(ref state);
@@ -41,31 +41,95 @@ partial struct CollisionSystem : ISystem
         var ecb = SystemAPI.GetSingleton<EndSimulationEntityCommandBufferSystem.Singleton>()
             .CreateCommandBuffer(state.WorldUnmanaged);
         var physicsWorldSingleton = SystemAPI.GetSingleton<PhysicsWorldSingleton>();
-        
-        state.Dependency = new CheckCollisionRock
+        var config = SystemAPI.GetSingleton<Config>();
+
+        if (config.ScheduleType == ScheduleType.Schedule || config.ScheduleType == ScheduleType.ScheduleParallel)
         {
-            ecb = ecb,
-            rockComponent = RockComponentLookup,
-            wall = wallLookup
-        }.Schedule(SystemAPI.GetSingleton<SimulationSingleton>(), state.Dependency);
-        
-        state.Dependency = new CheckCollisionFish
+            state.Dependency = new CheckCollisionRockJob
+            {
+                ecb = ecb,
+                rockComponent = RockComponentLookup,
+                wall = wallLookup
+            }.Schedule(SystemAPI.GetSingleton<SimulationSingleton>(), state.Dependency);
+
+            state.Dependency = new CheckCollisionFishJob
+            {
+                ecb = ecb,
+                fish = fishLookup,
+                wall = wallLookup,
+                PhysicsWorldSingleton = physicsWorldSingleton,
+                localTransform = localTransformUp
+            }.Schedule(SystemAPI.GetSingleton<SimulationSingleton>(), state.Dependency);
+        }
+        else
         {
-            ecb = ecb,
-            fish = fishLookup,
-            wall = wallLookup,
-            PhysicsWorldSingleton = physicsWorldSingleton,
-            localTransform = localTransformUp
-        }.Schedule(SystemAPI.GetSingleton<SimulationSingleton>(), state.Dependency);
+            var sim = SystemAPI.GetSingleton<SimulationSingleton>().AsSimulation();
+            // Wait for jobs to complete so we can access the collisionEvents
+            sim.FinalJobHandle.Complete();
+
+            CheckCollisionRock(ref state, ecb, sim.CollisionEvents);
+            CheckCollisionFish(ref state, ecb, physicsWorldSingleton, sim.CollisionEvents);
+        }
+    }
+
+    public void CheckCollisionRock(ref SystemState state, EntityCommandBuffer ecb ,CollisionEvents collisionEvents)
+    {
+        foreach (var collisionEvent in collisionEvents)
+        {
+            Entity rockEntity = Entity.Null;
+
+            if (SystemAPI.HasComponent<RockComponent>(collisionEvent.EntityA) &&
+                SystemAPI.HasComponent<WallTag>(collisionEvent.EntityB))
+            {
+                rockEntity = collisionEvent.EntityA;
+            }
+            else if (SystemAPI.HasComponent<RockComponent>(collisionEvent.EntityB) &&
+                     SystemAPI.HasComponent<WallTag>(collisionEvent.EntityA))
+            {
+                rockEntity = collisionEvent.EntityB;
+            }
+
+            if (rockEntity.Equals(Entity.Null)) return;
+            ecb.DestroyEntity(rockEntity);
+        }
     }
     
-    
-    
-    public partial struct CheckCollisionRock : ICollisionEventsJob
+    public void CheckCollisionFish(ref SystemState state, EntityCommandBuffer ecb, PhysicsWorldSingleton physicsWorldSingleton ,CollisionEvents collisionEvents)
+    {
+        foreach (var collisionEvent in collisionEvents)
+        {
+            Entity fishEntity = Entity.Null;
+
+            if (SystemAPI.HasComponent<FishAttributes>(collisionEvent.EntityA) &&
+                SystemAPI.HasComponent<WallTag>(collisionEvent.EntityB))
+            {
+                fishEntity = collisionEvent.EntityA;
+            }
+            else if (SystemAPI.HasComponent<RockComponent>(collisionEvent.EntityB) &&
+                     SystemAPI.HasComponent<WallTag>(collisionEvent.EntityA))
+            {
+                fishEntity = collisionEvent.EntityB;
+            }
+
+            if (fishEntity.Equals(Entity.Null)) return;
+            
+            var collisionDetails = collisionEvent.CalculateDetails(ref physicsWorldSingleton.PhysicsWorld);
+            var avgContactPointPosition = collisionDetails.AverageContactPointPosition;
+            var fish = SystemAPI.GetComponentRW<FishAttributes>(fishEntity);
+            fish.ValueRW.HasHitWall = true;
+            fish.ValueRW.PosToMoveAwayFrom = avgContactPointPosition;
+
+        }
+    }
+
+
+
+    [BurstCompile]
+    public partial struct CheckCollisionRockJob : ICollisionEventsJob
     {
         public EntityCommandBuffer ecb;
         public ComponentLookup<RockComponent> rockComponent;
-        [ReadOnly] public ComponentLookup<Wall> wall;
+        [ReadOnly] public ComponentLookup<WallTag> wall;
 
         public void Execute(CollisionEvent collisionEvent)
         {
@@ -83,19 +147,19 @@ partial struct CollisionSystem : ISystem
             }
             else rockEntity = Entity.Null;
 
-            if (!rockEntity.Equals(Entity.Null))
-            {
-                ecb.DestroyEntity(rockEntity);
-            }
+            if (rockEntity.Equals(Entity.Null)) return;
+            
+            ecb.DestroyEntity(rockEntity);
         }
     }
     
-    public partial struct CheckCollisionFish : ICollisionEventsJob
+    [BurstCompile]
+    public partial struct CheckCollisionFishJob : ICollisionEventsJob
     {
         public EntityCommandBuffer ecb;
         // we need to look entities with fishes
         public ComponentLookup<FishAttributes> fish;
-        [ReadOnly] public ComponentLookup<Wall> wall;
+        [ReadOnly] public ComponentLookup<WallTag> wall;
         public ComponentLookup<LocalTransform> localTransform;
         [ReadOnly] public PhysicsWorldSingleton PhysicsWorldSingleton;
 
@@ -122,39 +186,16 @@ partial struct CollisionSystem : ISystem
                 wallEntity = Entity.Null;
             }
 
-            if (!fishEntity.Equals(Entity.Null) && !wallEntity.Equals(Entity.Null))
-            {
-                // if fishes are colliding with wall:
-                /*
-                 * If fish hit ceiling: y coord is too high, change. Opposite for floor
-                 * If fish hit right: x coord too high, Opposite for Left
-                 * If fish hit Front: z coord too low, opposite for Back
-                 */
-                WallType wallType = wall.GetRefRO(wallEntity).ValueRO.WType;
-                switch (wallType)
-                {
-                    case WallType.Ceiling:
-                        fish.GetRefRW(fishEntity).ValueRW.CollisionAdjust = new float3(0,localTransform.GetRefRO(fishEntity).ValueRO.Position.y * -1,0);    
-                        break;
-                    case WallType.Floor:
-                        fish.GetRefRW(fishEntity).ValueRW.CollisionAdjust = new float3(0,40,0); 
-                        break;
-                    case WallType.Left:
-                        fish.GetRefRW(fishEntity).ValueRW.CollisionAdjust = new float3(40,0,0);    
-                        break;
-                    case WallType.Right:
-                        fish.GetRefRW(fishEntity).ValueRW.CollisionAdjust = new float3(-40,0,0);    
-                        break;
-                    case WallType.Front:
-                        fish.GetRefRW(fishEntity).ValueRW.CollisionAdjust = new float3(0,0,-40);    
-                        break;
-                    case WallType.Back:
-                        fish.GetRefRW(fishEntity).ValueRW.CollisionAdjust = new float3(0,0,40);    
-                        break;
-                    default:
-                        throw new ArgumentOutOfRangeException();
-                }
-            }
+            if (fishEntity.Equals(Entity.Null) && wallEntity.Equals(Entity.Null)) return;
+
+            /*
+             * If one fish bonks into a wall - find out what fish school it comes from
+             * and adjust the entire school's movement instead.
+             */
+                var collisionDetails = collisionEvent.CalculateDetails(ref PhysicsWorldSingleton.PhysicsWorld);
+                var avgContactPointPosition = collisionDetails.AverageContactPointPosition;
+                fish.GetRefRW(fishEntity).ValueRW.HasHitWall = true;
+                fish.GetRefRW(fishEntity).ValueRW.PosToMoveAwayFrom = avgContactPointPosition;
         }
     }
 }

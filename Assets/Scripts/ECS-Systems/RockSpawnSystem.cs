@@ -39,8 +39,8 @@ partial struct RockSpawnSystem : ISystem
             
             var ran = new Unity.Mathematics.Random((uint)time + 1);
             float x = ran.NextFloat(-14.5f, 17f);
-            float y = ran.NextFloat(0, 13.5f);
-            float z = ran.NextFloat(0, 77);
+            float y = ran.NextFloat(-20, 20);
+            float z = ran.NextFloat(0, 55);
             state.EntityManager.SetComponentData(rockEntity, new LocalTransform
             {
                 Position = new float3(x, y, z),
@@ -48,10 +48,15 @@ partial struct RockSpawnSystem : ISystem
                 Scale = rockTransform.Scale
             });
             float3 velocity = new float3(ran.NextFloat(0, 20),ran.NextFloat(0, 2), ran.NextFloat(0,20));
-            
-            if (z > 60f)
+
+            if (x > 10f)
             {
-                velocity = new float3(velocity.x, velocity.y, -velocity.z);
+                velocity.x = -velocity.x;
+            }
+
+            if (z > 45f)
+            {
+                velocity.z = -velocity.z;
             }
 
             state.EntityManager.SetComponentData(rockEntity, new RockComponent()

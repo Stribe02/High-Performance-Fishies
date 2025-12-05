@@ -160,6 +160,7 @@ MonoBehaviour:
   defaultAlignmentWeight: 1
   defaultSeparationRadius: 2
   shouldSpawnRock: 0
+  moveAwayFromWallMultiplier: 4
 --- !u!4 &1153304
 Transform:
   m_ObjectHideFlags: 0
@@ -336,22 +337,6 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
-    - target: {fileID: 318267450272265400, guid: 84400e479cbfe0540b6c1b26a77322c7, type: 3}
-      propertyPath: m_ProvidesContacts
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 487134946375313109, guid: 84400e479cbfe0540b6c1b26a77322c7, type: 3}
-      propertyPath: m_ProvidesContacts
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 1534744298439913883, guid: 84400e479cbfe0540b6c1b26a77322c7, type: 3}
-      propertyPath: m_ProvidesContacts
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 2766270267268482506, guid: 84400e479cbfe0540b6c1b26a77322c7, type: 3}
-      propertyPath: m_ProvidesContacts
-      value: 1
-      objectReference: {fileID: 0}
     - target: {fileID: 3903785693981964840, guid: 84400e479cbfe0540b6c1b26a77322c7, type: 3}
       propertyPath: m_LocalPosition.x
       value: 53.6
@@ -391,14 +376,6 @@ PrefabInstance:
     - target: {fileID: 3903785693981964840, guid: 84400e479cbfe0540b6c1b26a77322c7, type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 5783673563155650571, guid: 84400e479cbfe0540b6c1b26a77322c7, type: 3}
-      propertyPath: m_ProvidesContacts
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 7755871155664997351, guid: 84400e479cbfe0540b6c1b26a77322c7, type: 3}
-      propertyPath: m_ProvidesContacts
-      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 8849346201185164837, guid: 84400e479cbfe0540b6c1b26a77322c7, type: 3}
       propertyPath: m_Name
