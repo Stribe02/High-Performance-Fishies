@@ -7,8 +7,6 @@ using Unity.Rendering;
 using Unity.Transforms;
 using UnityEngine;
 
-
-
 partial struct FishSchoolSpawner : ISystem
 {
     BufferLookup<LinkedEntityGroup> linkedEntityGroupLookup;
@@ -161,7 +159,6 @@ partial struct FishSchoolSpawner : ISystem
         public int schoolIndex;
         public void Execute([ChunkIndexInQuery] int index, ref LocalTransform localTransform, ref FishAttributes fishAttributes, ref AquaticAnimalAttributes aquaticAttributes, ref URPMaterialPropertyBaseColor baseColor)
         {
-            
             var ran = new Unity.Mathematics.Random(((uint)schoolIndex) + 1);
             ecb.AddComponent(index, fishes, in fishComponents);
 
