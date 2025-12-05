@@ -98,19 +98,23 @@ partial struct FishSchoolSpawner : ISystem
                     spawnHandle = spawnJob.ScheduleParallel(state.Dependency);
                     break;
                 case ScheduleType.Run:
+                    var ran = new Unity.Mathematics.Random(((uint)fishSchoolData.SchoolIndex) + 1);
                     state.EntityManager.AddComponent(fishes, fishComponents);
 
-                    var ran = new Unity.Mathematics.Random(((uint)fishSchoolData.SchoolIndex) + 1);
+                    //Make sure to set the index first
+                    foreach (var fish in fishes)
+                    {
+                        state.EntityManager.SetComponentData<FishAttributes>(fish, new FishAttributes
+                        {
+                            SchoolIndex = fishSchoolData.SchoolIndex,
+                            Velocity = ran.NextFloat3(0, 1) * 2f
+                        });
+                    }
 
                     foreach (var (fishAttribute, aquaticAttribute, transform, fish) in SystemAPI.Query<RefRW<FishAttributes>, RefRW<AquaticAnimalAttributes>, RefRW<LocalTransform>>().WithEntityAccess())
                     {
                         if (fishAttribute.ValueRW.SchoolIndex == fishSchoolData.SchoolIndex)
                         {
-                            state.EntityManager.SetComponentData<FishAttributes>(fish, new FishAttributes
-                            {
-                                SchoolIndex = fishSchoolData.SchoolIndex,
-                                Velocity = ran.NextFloat3(0, 1) * 2f
-                            });
                             state.EntityManager.SetComponentData<AquaticAnimalAttributes>(fish, new AquaticAnimalAttributes
                             {
                                 Speed = 2f,
@@ -130,7 +134,7 @@ partial struct FishSchoolSpawner : ISystem
                             {
                                 ecb.SetComponent<URPMaterialPropertyBaseColor>(ent.Value, new URPMaterialPropertyBaseColor { Value = colorc });
                             }
-                        } 
+                        }
                     }
                     fishPrefabsLookup.Update(ref state);
                     fishPrefabsLookup.TryGetBuffer(SystemAPI.GetSingletonEntity<Config>(), out fishPrefabs);
