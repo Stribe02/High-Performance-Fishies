@@ -5,6 +5,7 @@ using Unity.Entities;
 using Unity.Jobs;
 using Unity.Mathematics;
 using Unity.Transforms;
+using UnityEditor.Rendering;
 using UnityEngine;
 
 [CreateAfter(typeof(FishSchoolSpawner))]
@@ -13,6 +14,8 @@ partial struct FishSchoolMovementSystem : ISystem
 
     BufferLookup<SchoolFishes> schoolFishesLookup;
     EntityQuery query_fish;
+    ComponentLookup<LocalTransform> neighbourLocalTransformLookup;
+
     
 
     [BurstCompile]
@@ -22,13 +25,16 @@ partial struct FishSchoolMovementSystem : ISystem
         >();
         state.RequireForUpdate<Config>();
         schoolFishesLookup = state.GetBufferLookup<SchoolFishes>();
+        neighbourLocalTransformLookup = state.GetComponentLookup<LocalTransform>(true);
         query_fish = new EntityQueryBuilder(Allocator.Temp).WithAll<FishAttributes>().Build(ref state);
+        
 
     }
     
     public void OnUpdate(ref SystemState state)
     {
         schoolFishesLookup.Update(ref state);
+        neighbourLocalTransformLookup.Update(ref state);
         var ecb =
             SystemAPI.GetSingleton<BeginSimulationEntityCommandBufferSystem.Singleton
             >().CreateCommandBuffer(state.WorldUnmanaged);
@@ -73,6 +79,7 @@ partial struct FishSchoolMovementSystem : ISystem
                     fishes = tempList,
                     moveAway = moveAway,
                     seperationCount = seperationCount,
+                    neighbourTransform = neighbourLocalTransformLookup,
                     schoolIndex = fishSchoolAttribute.ValueRO.SchoolIndex,
                     seperationRadius = fishSchoolAttribute.ValueRO.SeparationRadius
                 };
@@ -89,26 +96,27 @@ partial struct FishSchoolMovementSystem : ISystem
 
                 /* AlignmentJob: */
 
+                NativeList<Entity> tempFishList = query_fish.ToEntityListAsync(Allocator.TempJob, out JobHandle secondQuery);
                 NativeArray<float3> averageVelocity = new NativeArray<float3>(1, Allocator.TempJob);
                 NativeArray<int> alignmentCount = new NativeArray<int>(1, Allocator.TempJob);
                 AlignmentJob alignmentJob = new AlignmentJob
                 {
                     averageVelocity = averageVelocity,
                     count = alignmentCount,
-                    schoolIndex = fishSchoolAttribute.ValueRO.SchoolIndex
+                    schoolIndex = fishSchoolAttribute.ValueRO.SchoolIndex,
+                    fishes = tempFishList
                 };
 
                 JobHandle alignmentHandle = default;
                 if (config.ScheduleType == ScheduleType.Schedule)
                 {
-                    alignmentHandle = alignmentJob.Schedule(state.Dependency);
+                    alignmentHandle = alignmentJob.Schedule(secondQuery);
                 }
                 else
                 {
-                    alignmentHandle = alignmentJob.ScheduleParallel(state.Dependency);
+                    alignmentHandle = alignmentJob.ScheduleParallel(secondQuery);
                 }
 
-                float3 moveAwayFloaty = float3.zero;
                 /* MoveAwayFrom Job*/
                 JobHandle moveAwayHandle = default;
                 NativeArray<float3> moveAwayFloatyArray = new NativeArray<float3>(1, Allocator.TempJob);
@@ -127,30 +135,42 @@ partial struct FishSchoolMovementSystem : ISystem
                     moveAwayHandle = moveAwayFromWallJob.ScheduleParallel(state.Dependency);
                 }
 
-                moveAwayHandle.Complete();
-                moveAwayFloaty = moveAwayFloatyArray[0];
-                moveAwayFloatyArray.Dispose();
-
                 // make sure the jobs are completed
                 // yoink the values from job
+                moveAwayHandle.Complete();
                 cohesionHandle.Complete();
                 alignmentHandle.Complete();
                 separationHandle.Complete();
-                // Make sure we don't get a NaFn
 
-                int sepCount = seperationCount[0]; //- 1; // count one less fish
-                if (sepCount > 0)
+                
+                UpdateFishDataJob updateFishJob = new UpdateFishDataJob
                 {
-                    moveAway[0] /= sepCount;
+                    centerOfMass = centerOfMass[0],
+                    schoolIndex = fishSchoolAttribute.ValueRO.SchoolIndex,
+                    cohesionCount = cohesionCount[0]-1,
+                    seperationCount = seperationCount[0]-1,
+                    alignmentCount = alignmentCount[0]-1,
+                    moveAway = moveAway[0],
+                    averageVelocity = averageVelocity[0],
+                    moveAwayFloatyWall = moveAwayFloatyArray[0],
+                    deltaTime = SystemAPI.Time.DeltaTime,
+                    cohesionWeight = fishSchoolAttribute.ValueRO.CohesionWeight,
+                    separationWeight = fishSchoolAttribute.ValueRO.SeparationWeight,
+                    alignmentWeight = fishSchoolAttribute.ValueRO.AlignmentWeight,
+                };
+
+                JobHandle updateFishHandle = default;
+                if (config.ScheduleType == ScheduleType.Schedule)
+                {
+                    updateFishHandle = updateFishJob.Schedule(state.Dependency);
+                }
+                else
+                {
+                    updateFishHandle = updateFishJob.ScheduleParallel(state.Dependency);
                 }
 
-                float3 centerMass = centerOfMass[0];
-                int cohesiCount = cohesionCount[0]; //- 1; // count one less fish
-                float3 moveAwaySep = moveAway[0];
-                float3 avgVelocity = averageVelocity[0];
-                int alignCount = alignmentCount[0]; //- 1; 
-
-
+                updateFishHandle.Complete();
+                
                 // Dispose of the Arrays used in jobs:
                 centerOfMass.Dispose();
                 cohesionCount.Dispose();
@@ -159,38 +179,10 @@ partial struct FishSchoolMovementSystem : ISystem
                 seperationCount.Dispose();
                 averageVelocity.Dispose();
                 alignmentCount.Dispose();
+                moveAwayFloatyArray.Dispose();
+                tempFishList.Dispose();
 
-
-                UpdateFishDataJob updateFishJob = new UpdateFishDataJob
-                {
-                    centerOfMass = centerMass,
-                    schoolIndex = fishSchoolAttribute.ValueRO.SchoolIndex,
-                    cohesionCount = cohesiCount,
-                    seperationCount = sepCount,
-                    alignmentCount = alignCount,
-                    moveAway = moveAwaySep,
-                    averageVelocity = avgVelocity,
-                    moveAwayFloatyWall = moveAwayFloaty,
-                    deltaTime = SystemAPI.Time.DeltaTime,
-                    cohesionWeight = fishSchoolAttribute.ValueRO.CohesionWeight,
-                    separationWeight = fishSchoolAttribute.ValueRO.SeparationWeight,
-                    alignmentWeight = fishSchoolAttribute.ValueRO.AlignmentWeight,
-                    ecb = ecb,
-                };
-
-                JobHandle updateFishHandle = default;
-                if (config.ScheduleType == ScheduleType.Schedule)
-                {
-                    updateFishHandle = updateFishJob.Schedule(separationHandle);
-                }
-                else
-                {
-                    updateFishHandle = updateFishJob.ScheduleParallel(state.Dependency);
-                }
-                
-                updateFishHandle.Complete();
-                
-            }
+            } 
             else if (config.ScheduleType == ScheduleType.Run)
             {
                 foreach (var (fishAttributes, aquaData, fishTransform, fish) in SystemAPI
@@ -271,8 +263,8 @@ partial struct FishSchoolMovementSystem : ISystem
         public NativeArray<float3> moveAway;
         public int schoolIndex;
         public NativeList<Entity> fishes;        
-        public float3 fishEntityTransform;
         public float seperationRadius;
+        [ReadOnly] public ComponentLookup<LocalTransform> neighbourTransform;
         [NativeDisableParallelForRestriction]
         public NativeArray<int> seperationCount;
 
@@ -282,14 +274,14 @@ partial struct FishSchoolMovementSystem : ISystem
             {
                 // how do you get two entities in one go?
                 if (!fish.Equals(neighbourFish) && fishAttributes.SchoolIndex == schoolIndex
-                                                && (math.distance(fishEntityTransform,
+                                                && (math.distance(neighbourTransform.GetRefRO(neighbourFish).ValueRO.Position,
                                                     new float3(fishTransform.Position.x,
                                                         fishTransform.Position.y,
                                                         fishTransform.Position.z)) < seperationRadius))
                 {
-                    float3 difference = fishEntityTransform - new float3(fishTransform.Position.x,
+                    float3 difference = neighbourTransform.GetRefRO(neighbourFish).ValueRO.Position - new float3(fishTransform.Position.x,
                         fishTransform.Position.y, fishTransform.Position.z);
-                    moveAway[0] += math.normalize(difference) / math.length(difference);
+                    moveAway[0] -= difference;
                     seperationCount[0]++;
                 }
             }
@@ -297,7 +289,7 @@ partial struct FishSchoolMovementSystem : ISystem
     }
     
     
-    [BurstCompile]
+
     public partial struct AlignmentJob : IJobEntity
     {
         [NativeDisableParallelForRestriction]
@@ -305,14 +297,18 @@ partial struct FishSchoolMovementSystem : ISystem
         public int schoolIndex;
         [NativeDisableParallelForRestriction]
         public NativeArray<int> count;
+        public NativeList<Entity> fishes;        
 
-        public void Execute(in LocalTransform fishTransform, in FishAttributes fishAttributes)
+
+        public void Execute(in LocalTransform fishTransform, in FishAttributes fishAttributes, Entity fish)
         {
-            if (fishAttributes.SchoolIndex == schoolIndex)
+            foreach (Entity neighbourFish in fishes)
             {
-                averageVelocity[0] += new float3(fishTransform.Position.x, fishTransform.Position.y,
-                    fishTransform.Position.z);
-                count[0]++;
+                if (!fish.Equals(neighbourFish) && fishAttributes.SchoolIndex == schoolIndex)
+                {
+                    averageVelocity[0] += fishAttributes.Velocity;
+                    count[0]++;
+                }
             }
         }
     }
@@ -350,56 +346,40 @@ partial struct FishSchoolMovementSystem : ISystem
         public float cohesionWeight;
         public float separationWeight;
         public float alignmentWeight;
-        public EntityCommandBuffer ecb;
 
         public void Execute(ref LocalTransform fishTransform, ref FishAttributes fishAttributes, ref AquaticAnimalAttributes aquaData, Entity fish)
         {
-            if (fishAttributes.SchoolIndex == schoolIndex)
-            {
-                float3 cohesion = math.normalize((centerOfMass / cohesionCount) - fishTransform.Position) *
-                                  cohesionWeight;
-                float3 separation = seperationCount > 0
-                    ? math.normalize(moveAway / seperationCount) * separationWeight
-                    : float3.zero;
-                float3 alignment = math.normalize(averageVelocity /= alignmentCount) * alignmentWeight;
+             if (fishAttributes.SchoolIndex == schoolIndex)
+             {
+                 // For each loops in here
+                 float3 cohesion = cohesionCount > 0 ? math.normalize((centerOfMass / cohesionCount) - fishTransform.Position) * cohesionWeight : float3.zero;
+                 //float3 separation = seperationCount > 0 ?  math.normalize(moveAway / seperationCount) * separationWeight : float3.zero;
+                 float3 separation = moveAway * separationWeight;
 
-                Debug.Log("cohesion " + cohesion);
-                Debug.Log("separation " + separation);
-                Debug.Log("alignment " + alignment);
-                    
+                 float3 alignment = alignmentCount > 0 ? averageVelocity / alignmentCount : float3.zero;
+                 alignment = (alignment - fishAttributes.Velocity) / 8;
+                 alignment *= alignmentWeight;
+                 
+                 fishAttributes.Velocity += cohesion + separation + alignment;
+                 fishAttributes.Velocity = clampLength(fishAttributes.Velocity, aquaData.Speed);
 
-                fishAttributes.Velocity += cohesion + separation + alignment;
+                 fishTransform.Position +=
+                     (fishAttributes.Velocity * deltaTime);
 
-                fishAttributes.Velocity = clampLength(fishAttributes.Velocity, aquaData.Speed);
-
-                fishTransform.Position += fishAttributes.Velocity * deltaTime + moveAwayFloatyWall;
-                fishTransform.Rotation = quaternion.LookRotation(fishAttributes.Velocity, math.up());
-                fishAttributes.HasHitWall = false;
-                
-                ecb.SetComponent<FishAttributes>(fish, new FishAttributes
-                {
-                    Velocity = fishAttributes.Velocity,
-                    SchoolIndex = fishAttributes.SchoolIndex,
-                    HasHitWall = false
-                });
-                ecb.SetComponent<LocalTransform>(fish, new LocalTransform
-                {
-                    Position = fishTransform.Position,
-                    Rotation = fishTransform.Rotation,
-                    Scale = fishTransform.Scale
-                });
-
-                Debug.Log("fish pos " + fishTransform.Position);
-            }
+                 if (fishAttributes.HasHitWall) fishAttributes.HasHitWall = false;
+                 
+                 fishTransform.Rotation =
+                     quaternion.LookRotation(fishAttributes.Velocity, math.up());
+             }
         }
-
+        // ClampMagnitude but for float3
         private float3 clampLength(float3 floaty, float maxLength)
         {
             if (math.lengthsq(floaty) > maxLength * maxLength)
             {
-                return math.normalize(floaty) * maxLength;
+                float scale = maxLength / math.length(floaty);
+                return floaty * scale;
             }
-
             return floaty;
         }
     }
@@ -454,9 +434,8 @@ partial struct FishSchoolMovementSystem : ISystem
                                                  fishTransform.ValueRO.Position.y,
                                                  fishTransform.ValueRO.Position.z)) < seperationRadius)
             {
-                float3 difference = fishEntityTransform - new float3(fishTransform.ValueRO.Position.x,
-                    fishTransform.ValueRO.Position.y, fishTransform.ValueRO.Position.z);
-                moveAway += math.normalize(difference) / math.length(difference); // something with scaling
+                float3 difference = fishEntityTransform - fishTransform.ValueRO.Position;
+                moveAway -= difference;
                 seperationCount++;
             }
         }
@@ -480,8 +459,7 @@ partial struct FishSchoolMovementSystem : ISystem
         {
             if (fishAttributes.ValueRO.SchoolIndex == schoolIndex)
             {
-                averageVelocity += new float3(fishTransform.ValueRO.Position.x, fishTransform.ValueRO.Position.y,
-                    fishTransform.ValueRO.Position.z);
+                averageVelocity += fishAttributes.ValueRO.Velocity;
                 count++;
             }
         }
@@ -500,7 +478,7 @@ partial struct FishSchoolMovementSystem : ISystem
         // query on School
         float3 moveAwayFloaty = float3.zero;
         foreach (var (fishTransform, fishAttributes, fish) in SystemAPI
-                     .Query<RefRW<LocalTransform>, RefRO<FishAttributes>>()
+                     .Query<RefRO<LocalTransform>, RefRO<FishAttributes>>()
                      .WithEntityAccess())
         {
             if (fishAttributes.ValueRO.SchoolIndex == schoolIndex)
@@ -517,12 +495,12 @@ partial struct FishSchoolMovementSystem : ISystem
     // should be similar to vector3 clampMagnitude
     public float3 ClampLength(float3 floaty, float maxLength)
     {
-        if (math.lengthsq(floaty) > maxLength * maxLength)
-        {
-            return math.normalize(floaty) * maxLength;
-        }
-
-        return floaty;
+            if (math.lengthsq(floaty) > maxLength * maxLength)
+            {
+                float scale = maxLength / math.length(floaty);
+                return floaty * scale;
+            }
+            return floaty;
     }
 }
 

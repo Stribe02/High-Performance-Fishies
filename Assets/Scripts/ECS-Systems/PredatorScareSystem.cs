@@ -12,6 +12,7 @@ using static UnityEditor.PlayerSettings;
 
 [CreateAfter(typeof(FishSchoolSpawner))]
 [CreateAfter(typeof(PredatorSpawnSystem))]
+[UpdateAfter(typeof(FishSchoolMovementSystem))]
 partial struct PredatorScareSystem : ISystem
 {
     EntityQuery query_schools;
