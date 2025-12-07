@@ -284,11 +284,11 @@ partial struct FishSchoolMovementSystem : ISystem
                                                 && (math.distance(neighbourTransform.GetRefRO(neighbourFish).ValueRO.Position,
                                                     new float3(fishTransform.Position.x,
                                                         fishTransform.Position.y,
-                                                        fishTransform.Position.z)) < seperationRadius))
+                                                        fishTransform.Position.z)) <= seperationRadius))
                 {
                     float3 difference = neighbourTransform.GetRefRO(neighbourFish).ValueRO.Position - new float3(fishTransform.Position.x,
                         fishTransform.Position.y, fishTransform.Position.z);
-                    moveAway[0] -= difference;
+                    moveAway[0] += difference;
                     seperationCount[0]++;
                 }
             }
