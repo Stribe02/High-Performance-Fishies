@@ -2,6 +2,7 @@ using System;
 using Unity.Burst;
 using Unity.Collections;
 using Unity.Entities;
+using Unity.Jobs;
 using Unity.Mathematics;
 using Unity.Physics;
 using Unity.Physics.Systems;
@@ -10,6 +11,7 @@ using UnityEngine;
 
 //[UpdateBefore(typeof(PhysicsSimulationGroup))]
 [UpdateInGroup(typeof(FixedStepSimulationSystemGroup))]
+[CreateAfter(typeof(FishSchoolSpawner))]
 partial struct CollisionSystem : ISystem
 {
     
@@ -17,6 +19,9 @@ partial struct CollisionSystem : ISystem
     ComponentLookup<WallTag> wallLookup;
     ComponentLookup<FishAttributes> fishLookup;
     ComponentLookup<LocalTransform> localTransformUp;
+    ComponentLookup<FishSchoolAttribute> fishSchoolAttributeLookup;
+    EntityQuery query_schools;
+
     
     [BurstCompile]
     public void OnCreate(ref SystemState state)
@@ -28,6 +33,8 @@ partial struct CollisionSystem : ISystem
         wallLookup = state.GetComponentLookup<WallTag>(true);
         fishLookup = state.GetComponentLookup<FishAttributes>();
         localTransformUp = state.GetComponentLookup<LocalTransform>();
+        fishSchoolAttributeLookup = state.GetComponentLookup<FishSchoolAttribute>();
+        query_schools = new EntityQueryBuilder(Allocator.Temp).WithAll<FishSchoolAttribute>().Build(ref state);
     }
 
     [BurstCompile]
@@ -37,6 +44,7 @@ partial struct CollisionSystem : ISystem
         wallLookup.Update(ref state);
         fishLookup.Update(ref state);
         localTransformUp.Update(ref state);
+        fishSchoolAttributeLookup.Update(ref state);
 
         var ecb = SystemAPI.GetSingleton<EndSimulationEntityCommandBufferSystem.Singleton>()
             .CreateCommandBuffer(state.WorldUnmanaged);
@@ -51,15 +59,20 @@ partial struct CollisionSystem : ISystem
                 rockComponent = RockComponentLookup,
                 wall = wallLookup
             }.Schedule(SystemAPI.GetSingleton<SimulationSingleton>(), state.Dependency);
-
+            
+            state.Dependency.Complete();
+            NativeList<Entity> tempList = query_schools.ToEntityListAsync(Allocator.TempJob, out JobHandle fishSchoolTest);
             state.Dependency = new CheckCollisionFishJob
             {
-                ecb = ecb,
                 fish = fishLookup,
                 wall = wallLookup,
                 PhysicsWorldSingleton = physicsWorldSingleton,
-                localTransform = localTransformUp
-            }.Schedule(SystemAPI.GetSingleton<SimulationSingleton>(), state.Dependency);
+                fishSchools = tempList,
+                fishShcoolAttribute = fishSchoolAttributeLookup
+            }.Schedule(SystemAPI.GetSingleton<SimulationSingleton>(), fishSchoolTest);
+
+            state.Dependency.Complete();
+            tempList.Dispose();
         }
         else
         {
@@ -118,7 +131,6 @@ partial struct CollisionSystem : ISystem
             var fish = SystemAPI.GetComponentRW<FishAttributes>(fishEntity);
             fish.ValueRW.HasHitWall = true;
             fish.ValueRW.PosToMoveAwayFrom = avgContactPointPosition;
-
         }
     }
 
@@ -156,11 +168,11 @@ partial struct CollisionSystem : ISystem
     [BurstCompile]
     public partial struct CheckCollisionFishJob : ICollisionEventsJob
     {
-        public EntityCommandBuffer ecb;
         // we need to look entities with fishes
         public ComponentLookup<FishAttributes> fish;
         [ReadOnly] public ComponentLookup<WallTag> wall;
-        public ComponentLookup<LocalTransform> localTransform;
+        public NativeList<Entity> fishSchools;
+        public ComponentLookup<FishSchoolAttribute> fishShcoolAttribute;
         [ReadOnly] public PhysicsWorldSingleton PhysicsWorldSingleton;
 
         public void Execute(CollisionEvent collisionEvent)
@@ -194,8 +206,15 @@ partial struct CollisionSystem : ISystem
              */
                 var collisionDetails = collisionEvent.CalculateDetails(ref PhysicsWorldSingleton.PhysicsWorld);
                 var avgContactPointPosition = collisionDetails.AverageContactPointPosition;
-                fish.GetRefRW(fishEntity).ValueRW.HasHitWall = true;
                 fish.GetRefRW(fishEntity).ValueRW.PosToMoveAwayFrom = avgContactPointPosition;
+                int fishSchoolIndex = fish.GetRefRO(fishEntity).ValueRO.SchoolIndex;
+                foreach (var school in fishSchools)
+                {
+                    if (fishShcoolAttribute.GetRefRO(school).ValueRO.SchoolIndex == fishSchoolIndex)
+                    {
+                        fishShcoolAttribute.GetRefRW(school).ValueRW.FishHasHitWall = true;
+                    }
+                }
         }
     }
 }

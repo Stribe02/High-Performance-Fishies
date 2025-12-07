@@ -59,7 +59,8 @@ partial struct FishSchoolSpawner : ISystem
                     SeparationWeight = config.DefaultSeparationWeight,
                     AlignmentWeight = config.DefaultAlignmentWeight,
                     SeparationRadius = config.DefaultSeparationRadius,
-                    FishPrefab = fishPrefabs.ElementAt(i).fishPrefab
+                    FishPrefab = fishPrefabs.ElementAt(i).fishPrefab,
+                    FishHasHitWall = false
                 }
             );
 

@@ -114,7 +114,8 @@ partial struct PredatorScareSystem : ISystem
                             AlignmentWeight = fishSchoolAttribute.ValueRW.AlignmentWeight,
                             SeparationRadius = fishSchoolAttribute.ValueRW.SeparationRadius,
                             FlockSize = fishSchoolAttribute.ValueRW.FlockSize,
-                            SchoolEntity = fishSchoolAttribute.ValueRW.SchoolEntity
+                            SchoolEntity = fishSchoolAttribute.ValueRW.SchoolEntity,
+                            FishHasHitWall = fishSchoolAttribute.ValueRO.FishHasHitWall,
 
                         });
                     }
@@ -128,7 +129,8 @@ partial struct PredatorScareSystem : ISystem
                             AlignmentWeight = fishSchoolAttribute.ValueRW.AlignmentWeight,
                             SeparationRadius = fishSchoolAttribute.ValueRW.SeparationRadius,
                             FlockSize = fishSchoolAttribute.ValueRW.FlockSize,
-                            SchoolEntity = fishSchoolAttribute.ValueRW.SchoolEntity
+                            SchoolEntity = fishSchoolAttribute.ValueRW.SchoolEntity,
+                            FishHasHitWall = fishSchoolAttribute.ValueRO.FishHasHitWall
 
                         });
                     }
@@ -209,7 +211,8 @@ partial struct PredatorScareSystem : ISystem
                     AlignmentWeight = fishSchoolAttribute.AlignmentWeight,
                     SeparationRadius = fishSchoolAttribute.SeparationRadius,
                     FlockSize = fishSchoolAttribute.FlockSize,
-                    SchoolEntity = fishSchoolAttribute.SchoolEntity
+                    SchoolEntity = fishSchoolAttribute.SchoolEntity,
+                    FishHasHitWall = fishSchoolAttribute.FishHasHitWall
 
                 });
             } else if (scared.ValueRO == false)
@@ -222,7 +225,8 @@ partial struct PredatorScareSystem : ISystem
                     AlignmentWeight = fishSchoolAttribute.AlignmentWeight,
                     SeparationRadius = fishSchoolAttribute.SeparationRadius,
                     FlockSize = fishSchoolAttribute.FlockSize,
-                    SchoolEntity = fishSchoolAttribute.SchoolEntity
+                    SchoolEntity = fishSchoolAttribute.SchoolEntity,
+                    FishHasHitWall = fishSchoolAttribute.FishHasHitWall
 
                 });
             }

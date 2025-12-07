@@ -32,7 +32,8 @@ class FishSchoolAuthoringBaker : Baker<FishSchoolAttributeAuthoring>
            SeparationRadius = authoring.separationRadius,
            FlockSize = authoring.flockSize,
            FishPrefab = GetEntity(authoring.fishPrefab, TransformUsageFlags.Dynamic),
-           SchoolEntity = GetEntity(authoring.SchoolObject, TransformUsageFlags.None)
+           SchoolEntity = GetEntity(authoring.SchoolObject, TransformUsageFlags.None),
+           FishHasHitWall = false
         };
         AddComponent(entity, fishSchool);
     }
@@ -48,6 +49,7 @@ public struct FishSchoolAttribute : IComponentData
     public int FlockSize;
     public Entity FishPrefab;
     public Entity SchoolEntity;
+    public bool FishHasHitWall;
 }
 [InternalBufferCapacity(100)]
 public struct SchoolFishes : IBufferElementData
