@@ -34,7 +34,7 @@ partial struct FishSchoolMovementSystem : ISystem
                 Vector3 separation =
                     Separation(ref state, fish,fishSchoolAttribute.ValueRW.Fishes ,fishPosition, fishSchoolAttribute.ValueRO.SchoolIndex,
                         fishSchoolAttribute.ValueRO.SeparationRadius) * fishSchoolAttribute.ValueRO.SeparationWeight;
-                Vector3 alignment = Alignment(ref state, fish,fishSchoolAttribute.ValueRW.Fishes ,fishPosition, fishSchoolAttribute.ValueRO.SchoolIndex) *
+                Vector3 alignment = Alignment(ref state, fish, fishSchoolAttribute.ValueRO.SchoolIndex) *
                                     fishSchoolAttribute.ValueRO.AlignmentWeight;
 
 
@@ -125,19 +125,17 @@ partial struct FishSchoolMovementSystem : ISystem
     
     // Rule 3
     [BurstCompile]
-    public Vector3 Alignment(ref SystemState state, Entity fishEntity, NativeArray<Entity> fishSchool,
-        Vector3 fishEntityTransform, int schoolIndex)
+    public Vector3 Alignment(ref SystemState state, Entity fishEntity, int schoolIndex)
     {
         Vector3 averageVelocity = Vector3.zero;
         int count = 0;
         
-        foreach (var (fishTransform, fishAttributes ,fish) in SystemAPI.Query<RefRW<LocalTransform>, RefRO<FishAttributes>>()
+        foreach (var (fishAttributes ,fish) in SystemAPI.Query<RefRO<FishAttributes>>()
                      .WithEntityAccess())
         {
-            if (fishAttributes.ValueRO.SchoolIndex == schoolIndex)
+            if (fishAttributes.ValueRO.SchoolIndex == schoolIndex && !fishEntity.Equals(fish))
             {
-                averageVelocity += new Vector3(fishTransform.ValueRO.Position.x, fishTransform.ValueRO.Position.y,
-                    fishTransform.ValueRO.Position.z);
+                averageVelocity += fishAttributes.ValueRO.Velocity;
                 count++;
             }
         }
