@@ -12,16 +12,18 @@ using static UnityEditor.PlayerSettings;
 
 [CreateAfter(typeof(FishSchoolSpawner))]
 [CreateAfter(typeof(PredatorSpawnSystem))]
+[UpdateAfter(typeof(FishSchoolMovementSystem))]
 partial struct PredatorScareSystem : ISystem
 {
-    EntityQuery query_schools;
     ComponentLookup<FishAttributes> fishAttributeLookup;
 
     [BurstCompile]
     public void OnCreate(ref SystemState state)
     {
         state.RequireForUpdate<PredatorTag>();
-        query_schools = new EntityQueryBuilder(Allocator.Temp).WithAll<FishSchoolAttribute>().Build(ref state);
+        state.RequireForUpdate<Config>();
+        state.RequireForUpdate<BeginSimulationEntityCommandBufferSystem.Singleton>();
+        state.RequireForUpdate<PhysicsWorldSingleton>();
         fishAttributeLookup = state.GetComponentLookup<FishAttributes>();
     }
 
@@ -113,8 +115,9 @@ partial struct PredatorScareSystem : ISystem
                             AlignmentWeight = fishSchoolAttribute.ValueRW.AlignmentWeight,
                             SeparationRadius = fishSchoolAttribute.ValueRW.SeparationRadius,
                             FlockSize = fishSchoolAttribute.ValueRW.FlockSize,
-                            SchoolEntity = fishSchoolAttribute.ValueRW.SchoolEntity
-
+                            SchoolEntity = fishSchoolAttribute.ValueRW.SchoolEntity,
+                            FishHasHitWall = fishSchoolAttribute.ValueRO.FishHasHitWall,
+                            PosToMoveAwayFrom = fishSchoolAttribute.ValueRO.PosToMoveAwayFrom
                         });
                     }
                     else if (!state.EntityManager.IsComponentEnabled<ScaredTag>(schoolEntity))
@@ -127,8 +130,9 @@ partial struct PredatorScareSystem : ISystem
                             AlignmentWeight = fishSchoolAttribute.ValueRW.AlignmentWeight,
                             SeparationRadius = fishSchoolAttribute.ValueRW.SeparationRadius,
                             FlockSize = fishSchoolAttribute.ValueRW.FlockSize,
-                            SchoolEntity = fishSchoolAttribute.ValueRW.SchoolEntity
-
+                            SchoolEntity = fishSchoolAttribute.ValueRW.SchoolEntity,
+                            FishHasHitWall = fishSchoolAttribute.ValueRO.FishHasHitWall,
+                            PosToMoveAwayFrom = fishSchoolAttribute.ValueRO.PosToMoveAwayFrom
                         });
                     }
                     state.EntityManager.SetComponentEnabled<ScaredTag>(schoolEntity, false);
@@ -208,7 +212,8 @@ partial struct PredatorScareSystem : ISystem
                     AlignmentWeight = fishSchoolAttribute.AlignmentWeight,
                     SeparationRadius = fishSchoolAttribute.SeparationRadius,
                     FlockSize = fishSchoolAttribute.FlockSize,
-                    SchoolEntity = fishSchoolAttribute.SchoolEntity
+                    SchoolEntity = fishSchoolAttribute.SchoolEntity,
+                    FishHasHitWall = fishSchoolAttribute.FishHasHitWall
 
                 });
             } else if (scared.ValueRO == false)
@@ -221,7 +226,8 @@ partial struct PredatorScareSystem : ISystem
                     AlignmentWeight = fishSchoolAttribute.AlignmentWeight,
                     SeparationRadius = fishSchoolAttribute.SeparationRadius,
                     FlockSize = fishSchoolAttribute.FlockSize,
-                    SchoolEntity = fishSchoolAttribute.SchoolEntity
+                    SchoolEntity = fishSchoolAttribute.SchoolEntity,
+                    FishHasHitWall = fishSchoolAttribute.FishHasHitWall
 
                 });
             }

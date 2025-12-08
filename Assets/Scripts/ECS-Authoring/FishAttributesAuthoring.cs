@@ -17,8 +17,6 @@ class FishBaker : Baker<FishAttributesAuthoring>
         {
             Velocity = authoring.velocity,
             SchoolIndex = authoring.schoolIndex,
-            HasHitWall = false,
-            PosToMoveAwayFrom = float3.zero
         };
         AddComponent(entity, fishPrefab);
     }
@@ -28,8 +26,6 @@ public struct FishAttributes : IComponentData
 {
     public float3 Velocity;
     public int SchoolIndex;
-    public bool HasHitWall;
-    public float3 PosToMoveAwayFrom;
 }
 
 public struct FishPrefab : IComponentData

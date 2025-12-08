@@ -59,13 +59,15 @@ partial struct FishSchoolSpawner : ISystem
                     SeparationWeight = config.DefaultSeparationWeight,
                     AlignmentWeight = config.DefaultAlignmentWeight,
                     SeparationRadius = config.DefaultSeparationRadius,
-                    FishPrefab = fishPrefabs.ElementAt(i).fishPrefab
+                    FishPrefab = fishPrefabs.ElementAt(i).fishPrefab,
+                    FishHasHitWall = false,
+                    PosToMoveAwayFrom = float3.zero,
                 }
             );
 
             var fishSchoolData = state.EntityManager.GetComponentData<FishSchoolAttribute>(fishSchoolEntity);
 
-            var fishes = state.EntityManager.Instantiate(fishSchoolData.FishPrefab, fishSchoolData.FlockSize, Allocator.TempJob); //leak?
+            var fishes = state.EntityManager.Instantiate(fishSchoolData.FishPrefab, fishSchoolData.FlockSize, Allocator.TempJob);
 
             schoolBuffer.EnsureCapacity(fishes.Length);
             schoolBuffer.AddRange(fishes.Reinterpret<SchoolFishes>());
@@ -109,7 +111,8 @@ partial struct FishSchoolSpawner : ISystem
                         });
                     }
 
-                    foreach (var (fishAttribute, aquaticAttribute, transform, fish) in SystemAPI.Query<RefRW<FishAttributes>, RefRW<AquaticAnimalAttributes>, RefRW<LocalTransform>>().WithEntityAccess())
+                    foreach (var (fishAttribute, aquaticAttribute, transform, fish) 
+                             in SystemAPI.Query<RefRW<FishAttributes>, RefRW<AquaticAnimalAttributes>, RefRW<LocalTransform>>().WithEntityAccess())
                     {
                         if (fishAttribute.ValueRW.SchoolIndex == fishSchoolData.SchoolIndex)
                         {
