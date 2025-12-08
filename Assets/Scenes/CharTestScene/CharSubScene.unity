@@ -157,7 +157,7 @@ MonoBehaviour:
   - {fileID: 8856548824803852618, guid: fb05bb949de498940bf301c022f5461c, type: 3}
   rockComponent: {fileID: 7566705128525377493, guid: f9e63cc6cd5c18d4e9cb6f7b871ba0bf, type: 3}
   scheduleType: 2
-  flockSize: 500
+  flockSize: 20
   defaultCohesionWeight: 1
   defaultSeparationWeight: 1
   defaultAlignmentWeight: 1

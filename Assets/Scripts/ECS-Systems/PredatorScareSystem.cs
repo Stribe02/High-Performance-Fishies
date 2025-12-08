@@ -22,6 +22,9 @@ partial struct PredatorScareSystem : ISystem
     public void OnCreate(ref SystemState state)
     {
         state.RequireForUpdate<PredatorTag>();
+        state.RequireForUpdate<Config>();
+        state.RequireForUpdate<BeginSimulationEntityCommandBufferSystem.Singleton>();
+        state.RequireForUpdate<PhysicsWorldSingleton>();
         query_schools = new EntityQueryBuilder(Allocator.Temp).WithAll<FishSchoolAttribute>().Build(ref state);
         fishAttributeLookup = state.GetComponentLookup<FishAttributes>();
     }
@@ -116,7 +119,7 @@ partial struct PredatorScareSystem : ISystem
                             FlockSize = fishSchoolAttribute.ValueRW.FlockSize,
                             SchoolEntity = fishSchoolAttribute.ValueRW.SchoolEntity,
                             FishHasHitWall = fishSchoolAttribute.ValueRO.FishHasHitWall,
-
+                            PosToMoveAwayFrom = fishSchoolAttribute.ValueRO.PosToMoveAwayFrom
                         });
                     }
                     else if (!state.EntityManager.IsComponentEnabled<ScaredTag>(schoolEntity))
@@ -130,8 +133,8 @@ partial struct PredatorScareSystem : ISystem
                             SeparationRadius = fishSchoolAttribute.ValueRW.SeparationRadius,
                             FlockSize = fishSchoolAttribute.ValueRW.FlockSize,
                             SchoolEntity = fishSchoolAttribute.ValueRW.SchoolEntity,
-                            FishHasHitWall = fishSchoolAttribute.ValueRO.FishHasHitWall
-
+                            FishHasHitWall = fishSchoolAttribute.ValueRO.FishHasHitWall,
+                            PosToMoveAwayFrom = fishSchoolAttribute.ValueRO.PosToMoveAwayFrom
                         });
                     }
                     state.EntityManager.SetComponentEnabled<ScaredTag>(schoolEntity, false);

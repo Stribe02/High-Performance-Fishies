@@ -43,8 +43,8 @@ partial struct FishSchoolMovementSystem : ISystem
 
 
         // should loop through the different school the cohesion etc. methods needs to loop through the fish of the school they get
-        foreach (var (fishSchoolAttribute, fishBuffer, fishSchool) in SystemAPI
-                     .Query<RefRW<FishSchoolAttribute>, DynamicBuffer<SchoolFishes>>().WithEntityAccess())
+        foreach (var fishSchoolAttribute in SystemAPI
+                     .Query<RefRW<FishSchoolAttribute>>())
         {
             if (config.ScheduleType is ScheduleType.Schedule or ScheduleType.ScheduleParallel)
             {
@@ -127,7 +127,8 @@ partial struct FishSchoolMovementSystem : ISystem
                     {
                         moveAwayFloaty = moveAwayFloatyArray,
                         multiplier = config.MoveAwayFromWallMultiplier,
-                        schoolIndex = fishSchoolAttribute.ValueRO.SchoolIndex
+                        schoolIndex = fishSchoolAttribute.ValueRO.SchoolIndex,
+                        posToMoveAwayFrom = fishSchoolAttribute.ValueRO.PosToMoveAwayFrom
                     };
                     if (config.ScheduleType == ScheduleType.Schedule)
                     {
@@ -208,17 +209,18 @@ partial struct FishSchoolMovementSystem : ISystem
                                 fishSchoolAttribute.ValueRO.SeparationRadius) *
                             fishSchoolAttribute.ValueRO.SeparationWeight;
                         float3 alignment =
-                            Alignment(ref state, fish, fishTransform.ValueRO.Position,
+                            Alignment(ref state,
                                 fishSchoolAttribute.ValueRO.SchoolIndex) *
                             fishSchoolAttribute.ValueRO.AlignmentWeight;
 
                         /* Get the fish data and apply the rules */
                         var moveAwayFloat3 = float3.zero;
-                        if (fishAttributes.ValueRO.HasHitWall)
+                        if (fishSchoolAttribute.ValueRO.FishHasHitWall)
                         {
-                            moveAwayFloat3 = MoveAwayFromWall(ref state, fishAttributes.ValueRO.PosToMoveAwayFrom,
+                            moveAwayFloat3 = MoveAwayFromWall(ref state, fishSchoolAttribute.ValueRO.PosToMoveAwayFrom,
                                 fishSchoolAttribute.ValueRO.SchoolIndex, 4);
-                            fishAttributes.ValueRW.HasHitWall = false;
+                            // Remember to set the HasHitWall Attribute back to false
+                            fishSchoolAttribute.ValueRW.FishHasHitWall = false;
                         }
 
                         fishAttributes.ValueRW.Velocity += cohesion + separation + alignment;
@@ -328,12 +330,13 @@ partial struct FishSchoolMovementSystem : ISystem
         public NativeArray<float3> moveAwayFloaty;
         public int schoolIndex;
         public int multiplier;
+        public float3 posToMoveAwayFrom;
 
         public void Execute(in LocalTransform fishTransform, in FishAttributes fishAttributes)
         {
             if (fishAttributes.SchoolIndex == schoolIndex)
             {
-                moveAwayFloaty[0] += -multiplier * fishAttributes.PosToMoveAwayFrom -
+                moveAwayFloaty[0] += -multiplier * posToMoveAwayFrom -
                                   fishTransform.Position;
             }
         }
@@ -355,7 +358,7 @@ partial struct FishSchoolMovementSystem : ISystem
         public float separationWeight;
         public float alignmentWeight;
 
-        public void Execute(ref LocalTransform fishTransform, ref FishAttributes fishAttributes, ref AquaticAnimalAttributes aquaData, Entity fish)
+        public void Execute(ref LocalTransform fishTransform, ref FishAttributes fishAttributes, ref AquaticAnimalAttributes aquaData)
         {
              if (fishAttributes.SchoolIndex == schoolIndex)
              {
@@ -454,14 +457,12 @@ partial struct FishSchoolMovementSystem : ISystem
     
     // Rule 3
     [BurstCompile]
-    public float3 Alignment(ref SystemState state, Entity fishEntity,
-        float3 fishEntityTransform, int schoolIndex)
+    public float3 Alignment(ref SystemState state, int schoolIndex)
     {
         float3 averageVelocity = float3.zero;
         int count = 0;
         
-        foreach (var (fishTransform, fishAttributes ,fish) in SystemAPI.Query<RefRW<LocalTransform>, RefRO<FishAttributes>>()
-                     .WithEntityAccess())
+        foreach (var fishAttributes in SystemAPI.Query<RefRO<FishAttributes>>())
         {
             if (fishAttributes.ValueRO.SchoolIndex == schoolIndex)
             {
@@ -488,7 +489,7 @@ partial struct FishSchoolMovementSystem : ISystem
         {
             if (fishAttributes.ValueRO.SchoolIndex == schoolIndex)
             {
-                moveAwayFloaty += -multiplier * fishAttributes.ValueRO.PosToMoveAwayFrom -
+                moveAwayFloaty += -multiplier * posToMoveAwayFrom -
                                   fishTransform.ValueRO.Position;
             }
         }

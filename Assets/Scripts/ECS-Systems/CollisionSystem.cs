@@ -68,7 +68,7 @@ partial struct CollisionSystem : ISystem
                 wall = wallLookup,
                 PhysicsWorldSingleton = physicsWorldSingleton,
                 fishSchools = tempList,
-                fishShcoolAttribute = fishSchoolAttributeLookup
+                fishSchoolAttribute = fishSchoolAttributeLookup
             }.Schedule(SystemAPI.GetSingleton<SimulationSingleton>(), fishSchoolTest);
 
             state.Dependency.Complete();
@@ -128,9 +128,16 @@ partial struct CollisionSystem : ISystem
             
             var collisionDetails = collisionEvent.CalculateDetails(ref physicsWorldSingleton.PhysicsWorld);
             var avgContactPointPosition = collisionDetails.AverageContactPointPosition;
-            var fish = SystemAPI.GetComponentRW<FishAttributes>(fishEntity);
-            fish.ValueRW.HasHitWall = true;
-            fish.ValueRW.PosToMoveAwayFrom = avgContactPointPosition;
+            
+            // based on the fish SchoolIndex -> set that schools fishHasHitWall and Position to move away from
+            foreach (var fishSchoolAttribute in SystemAPI
+                         .Query<RefRW<FishSchoolAttribute>>())
+            {
+                if (fishSchoolAttribute.ValueRO.SchoolIndex !=
+                    SystemAPI.GetComponentRO<FishAttributes>(fishEntity).ValueRO.SchoolIndex) continue;
+                fishSchoolAttribute.ValueRW.PosToMoveAwayFrom = avgContactPointPosition;
+                fishSchoolAttribute.ValueRW.FishHasHitWall = true;
+            }
         }
     }
 
@@ -172,7 +179,7 @@ partial struct CollisionSystem : ISystem
         public ComponentLookup<FishAttributes> fish;
         [ReadOnly] public ComponentLookup<WallTag> wall;
         public NativeList<Entity> fishSchools;
-        public ComponentLookup<FishSchoolAttribute> fishShcoolAttribute;
+        public ComponentLookup<FishSchoolAttribute> fishSchoolAttribute;
         [ReadOnly] public PhysicsWorldSingleton PhysicsWorldSingleton;
 
         public void Execute(CollisionEvent collisionEvent)
@@ -206,13 +213,13 @@ partial struct CollisionSystem : ISystem
              */
                 var collisionDetails = collisionEvent.CalculateDetails(ref PhysicsWorldSingleton.PhysicsWorld);
                 var avgContactPointPosition = collisionDetails.AverageContactPointPosition;
-                fish.GetRefRW(fishEntity).ValueRW.PosToMoveAwayFrom = avgContactPointPosition;
                 int fishSchoolIndex = fish.GetRefRO(fishEntity).ValueRO.SchoolIndex;
                 foreach (var school in fishSchools)
                 {
-                    if (fishShcoolAttribute.GetRefRO(school).ValueRO.SchoolIndex == fishSchoolIndex)
+                    if (fishSchoolAttribute.GetRefRO(school).ValueRO.SchoolIndex == fishSchoolIndex)
                     {
-                        fishShcoolAttribute.GetRefRW(school).ValueRW.FishHasHitWall = true;
+                        fishSchoolAttribute.GetRefRW(school).ValueRW.FishHasHitWall = true;
+                        fishSchoolAttribute.GetRefRW(school).ValueRW.PosToMoveAwayFrom = avgContactPointPosition;
                     }
                 }
         }

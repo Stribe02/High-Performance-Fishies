@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using Unity.Collections;
 using Unity.Collections.LowLevel.Unsafe;
 using Unity.Entities;
+using Unity.Mathematics;
 using UnityEngine;
 
 class FishSchoolAttributeAuthoring : MonoBehaviour
@@ -33,7 +34,8 @@ class FishSchoolAuthoringBaker : Baker<FishSchoolAttributeAuthoring>
            FlockSize = authoring.flockSize,
            FishPrefab = GetEntity(authoring.fishPrefab, TransformUsageFlags.Dynamic),
            SchoolEntity = GetEntity(authoring.SchoolObject, TransformUsageFlags.None),
-           FishHasHitWall = false
+           FishHasHitWall = false,
+           PosToMoveAwayFrom = float3.zero
         };
         AddComponent(entity, fishSchool);
     }
@@ -50,6 +52,7 @@ public struct FishSchoolAttribute : IComponentData
     public Entity FishPrefab;
     public Entity SchoolEntity;
     public bool FishHasHitWall;
+    public float3 PosToMoveAwayFrom;
 }
 [InternalBufferCapacity(100)]
 public struct SchoolFishes : IBufferElementData
