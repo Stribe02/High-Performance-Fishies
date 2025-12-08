@@ -15,7 +15,6 @@ using static UnityEditor.PlayerSettings;
 [UpdateAfter(typeof(FishSchoolMovementSystem))]
 partial struct PredatorScareSystem : ISystem
 {
-    EntityQuery query_schools;
     ComponentLookup<FishAttributes> fishAttributeLookup;
 
     [BurstCompile]
@@ -25,7 +24,6 @@ partial struct PredatorScareSystem : ISystem
         state.RequireForUpdate<Config>();
         state.RequireForUpdate<BeginSimulationEntityCommandBufferSystem.Singleton>();
         state.RequireForUpdate<PhysicsWorldSingleton>();
-        query_schools = new EntityQueryBuilder(Allocator.Temp).WithAll<FishSchoolAttribute>().Build(ref state);
         fishAttributeLookup = state.GetComponentLookup<FishAttributes>();
     }
 

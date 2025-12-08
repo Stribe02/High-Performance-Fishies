@@ -14,6 +14,8 @@ class ConfigAuthoring : MonoBehaviour
     public float defaultSeparationRadius = 2f;
     public bool shouldSpawnRock = false;
     public int moveAwayFromWallMultiplier = 4;
+    [Range(1f,100f)]
+    public float cohesionStepAmountFactor = 1f;
 }
 
 class ConfigAuthoringBaker : Baker<ConfigAuthoring>
@@ -36,7 +38,8 @@ class ConfigAuthoringBaker : Baker<ConfigAuthoring>
             DefaultSeparationWeight = authoring.defaultSeparationWeight,
             DefaultAlignmentWeight = authoring.defaultAlignmentWeight,
             DefaultSeparationRadius = authoring.defaultSeparationRadius,
-            MoveAwayFromWallMultiplier = authoring.moveAwayFromWallMultiplier
+            MoveAwayFromWallMultiplier = authoring.moveAwayFromWallMultiplier,
+            CohesionStepAmountFactor = authoring.cohesionStepAmountFactor
         };
         AddComponent(entity, new RockSpawning { ShouldSpawnRock = authoring.shouldSpawnRock });
         AddComponent(entity, config);
@@ -53,6 +56,7 @@ struct Config : IComponentData
     public float DefaultAlignmentWeight;
     public float DefaultSeparationRadius;
     public int MoveAwayFromWallMultiplier;
+    public float CohesionStepAmountFactor;
 }
 
 struct fishPrefabs : IBufferElementData

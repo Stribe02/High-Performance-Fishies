@@ -29,6 +29,7 @@ partial struct CollisionSystem : ISystem
         state.RequireForUpdate<SimulationSingleton>();
         state.RequireForUpdate<PhysicsWorldSingleton>();
         state.RequireForUpdate<Config>();
+        state.RequireForUpdate<EndSimulationEntityCommandBufferSystem.Singleton>();
         RockComponentLookup = state.GetComponentLookup<RockComponent>();
         wallLookup = state.GetComponentLookup<WallTag>(true);
         fishLookup = state.GetComponentLookup<FishAttributes>();

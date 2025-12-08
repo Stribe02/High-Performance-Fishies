@@ -39,7 +39,7 @@ partial struct PredatorMovementSystem : ISystem
             case ScheduleType.Run: 
                 foreach (var (transform, entity) in SystemAPI.Query<RefRW<LocalTransform>>().WithAll<PredatorTag>().WithEntityAccess())
                 {
-                    float3 dir = math.normalize(targetPosRun - new float3(transform.ValueRW.Position.x, transform.ValueRW.Position.y, transform.ValueRW.Position.z));
+                    float3 dir = math.normalize(targetPosRun - transform.ValueRO.Position);
 
                     if (!dir.Equals(float3.zero))
                     {
@@ -72,7 +72,7 @@ partial struct PredatorMovementSystem : ISystem
         public float3 randomVector;
         public void Execute(ref LocalTransform transform)
         {
-            float3 dir = math.normalize(targetPos[0] - new float3(transform.Position.x, transform.Position.y, transform.Position.z));
+            float3 dir = math.normalize(targetPos[0] - transform.Position);
         
             if (!dir.Equals(float3.zero))
             {
