@@ -64,6 +64,7 @@ partial struct PredatorMovementSystem : ISystem
         targetPosResult.Dispose();
     }
 
+    [BurstCompile]
     [WithAll(typeof(PredatorTag))]
     partial struct PredatorMoveJob : IJobEntity
     {

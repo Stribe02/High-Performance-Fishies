@@ -1,12 +1,9 @@
-using System.IO;
 using Unity.Burst;
 using Unity.Collections;
 using Unity.Entities;
 using Unity.Jobs;
 using Unity.Mathematics;
 using Unity.Transforms;
-using UnityEditor.Rendering;
-using UnityEngine;
 
 [CreateAfter(typeof(FishSchoolSpawner))]
 partial struct FishSchoolMovementSystem : ISystem
@@ -27,10 +24,9 @@ partial struct FishSchoolMovementSystem : ISystem
         schoolFishesLookup = state.GetBufferLookup<SchoolFishes>();
         neighbourLocalTransformLookup = state.GetComponentLookup<LocalTransform>(true);
         query_fish = new EntityQueryBuilder(Allocator.Temp).WithAll<FishAttributes>().Build(ref state);
-        
-
     }
     
+    [BurstCompile]
     public void OnUpdate(ref SystemState state)
     {
         schoolFishesLookup.Update(ref state);
@@ -288,7 +284,7 @@ partial struct FishSchoolMovementSystem : ISystem
     }
     
     
-
+    [BurstCompile]
     public partial struct AlignmentJob : IJobEntity
     {
         [NativeDisableParallelForRestriction]
@@ -327,7 +323,7 @@ partial struct FishSchoolMovementSystem : ISystem
         }
     }
     
-    
+    [BurstCompile]
     public partial struct UpdateFishDataJob : IJobEntity
     {
         public float3 centerOfMass;

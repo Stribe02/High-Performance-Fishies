@@ -1,13 +1,9 @@
-using System;
 using Unity.Burst;
 using Unity.Collections;
 using Unity.Entities;
 using Unity.Jobs;
-using Unity.Mathematics;
 using Unity.Physics;
-using Unity.Physics.Systems;
 using Unity.Transforms;
-using UnityEngine;
 
 //[UpdateBefore(typeof(PhysicsSimulationGroup))]
 [UpdateInGroup(typeof(FixedStepSimulationSystemGroup))]
@@ -86,6 +82,7 @@ partial struct CollisionSystem : ISystem
         }
     }
 
+    [BurstCompile]
     public void CheckCollisionRock(ref SystemState state, EntityCommandBuffer ecb ,CollisionEvents collisionEvents)
     {
         foreach (var collisionEvent in collisionEvents)
@@ -108,6 +105,7 @@ partial struct CollisionSystem : ISystem
         }
     }
     
+    [BurstCompile]
     public void CheckCollisionFish(ref SystemState state, EntityCommandBuffer ecb, PhysicsWorldSingleton physicsWorldSingleton ,CollisionEvents collisionEvents)
     {
         foreach (var collisionEvent in collisionEvents)
