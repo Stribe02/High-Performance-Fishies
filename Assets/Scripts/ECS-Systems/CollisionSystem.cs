@@ -1,13 +1,9 @@
-using System;
 using Unity.Burst;
 using Unity.Collections;
 using Unity.Entities;
 using Unity.Jobs;
-using Unity.Mathematics;
 using Unity.Physics;
-using Unity.Physics.Systems;
 using Unity.Transforms;
-using UnityEngine;
 
 //[UpdateBefore(typeof(PhysicsSimulationGroup))]
 [UpdateInGroup(typeof(FixedStepSimulationSystemGroup))]
@@ -85,6 +81,7 @@ partial struct CollisionSystem : ISystem
             CheckCollisionFish(ref state, ecb, physicsWorldSingleton, sim.CollisionEvents);
         }
     }
+
     [BurstCompile]
     public void CheckCollisionRock(ref SystemState state, EntityCommandBuffer ecb ,CollisionEvents collisionEvents)
     {
