@@ -31,6 +31,7 @@ partial struct FishSchoolMovementSystem : ISystem
 
     }
     
+    [BurstCompile]
     public void OnUpdate(ref SystemState state)
     {
         schoolFishesLookup.Update(ref state);
@@ -288,7 +289,7 @@ partial struct FishSchoolMovementSystem : ISystem
     }
     
     
-
+    [BurstCompile]
     public partial struct AlignmentJob : IJobEntity
     {
         [NativeDisableParallelForRestriction]
@@ -327,7 +328,7 @@ partial struct FishSchoolMovementSystem : ISystem
         }
     }
     
-    
+    [BurstCompile]
     public partial struct UpdateFishDataJob : IJobEntity
     {
         public float3 centerOfMass;

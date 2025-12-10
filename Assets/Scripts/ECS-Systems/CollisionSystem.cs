@@ -85,7 +85,7 @@ partial struct CollisionSystem : ISystem
             CheckCollisionFish(ref state, ecb, physicsWorldSingleton, sim.CollisionEvents);
         }
     }
-
+    [BurstCompile]
     public void CheckCollisionRock(ref SystemState state, EntityCommandBuffer ecb ,CollisionEvents collisionEvents)
     {
         foreach (var collisionEvent in collisionEvents)
@@ -108,6 +108,7 @@ partial struct CollisionSystem : ISystem
         }
     }
     
+    [BurstCompile]
     public void CheckCollisionFish(ref SystemState state, EntityCommandBuffer ecb, PhysicsWorldSingleton physicsWorldSingleton ,CollisionEvents collisionEvents)
     {
         foreach (var collisionEvent in collisionEvents)

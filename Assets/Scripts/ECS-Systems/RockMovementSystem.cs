@@ -8,7 +8,8 @@ using Unity.Physics.Systems;
 using Unity.Transforms;
 using UnityEngine;
 
-
+[CreateAfter(typeof(RockSpawnSystem))]
+[UpdateAfter(typeof(RockSpawnSystem))]
 partial struct RockMovementSystem : ISystem
 {
 
@@ -16,21 +17,19 @@ partial struct RockMovementSystem : ISystem
     public void OnCreate(ref SystemState state)
     {
         state.RequireForUpdate<SimulationSingleton>();
-        state.RequireForUpdate<EndSimulationEntityCommandBufferSystem.Singleton>();
-
+        state.RequireForUpdate<Config>();
+        state.RequireForUpdate<SimulationSingleton>();
+        state.RequireForUpdate<RockComponent>();
     }
 
     [BurstCompile]
     public void OnUpdate(ref SystemState state)
     {
-        var ecb = SystemAPI.GetSingleton<EndSimulationEntityCommandBufferSystem.Singleton>()
-            .CreateCommandBuffer(state.WorldUnmanaged);
         var config = SystemAPI.GetSingleton<Config>();
-
+        
 
         var rockMoveJob = new RockMoveJob
         {
-            ecb = ecb.AsParallelWriter(),
             dt = Time.deltaTime
         };
 
@@ -58,9 +57,9 @@ partial struct RockMovementSystem : ISystem
     }
 
     [BurstCompile]
+    [WithAll(typeof(RockComponent))]
     public partial struct RockMoveJob : IJobEntity
     {
-        public EntityCommandBuffer.ParallelWriter ecb;
         public float dt;
         public void Execute(ref LocalTransform transform, in RockComponent rock)
         {
