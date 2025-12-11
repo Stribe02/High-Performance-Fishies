@@ -4,6 +4,7 @@ using UnityEngine;
 
 class ConfigAuthoring : MonoBehaviour
 {
+    [Header("Choose fish prefabs with 'entities' prefix")]
     public List<GameObject> fishPrefabList;
     public GameObject rockComponent;
     public ScheduleType scheduleType;
