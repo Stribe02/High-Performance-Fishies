@@ -54,11 +54,6 @@ public struct FishSchoolAttribute : IComponentData
     public bool FishHasHitWall;
     public float3 PosToMoveAwayFrom;
 }
-[InternalBufferCapacity(100)]
-public struct SchoolFishes : IBufferElementData
-{
-    public Entity Fish;
-}
 
 public struct ScaredTag : IComponentData, IEnableableComponent
 {

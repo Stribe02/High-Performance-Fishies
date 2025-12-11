@@ -45,9 +45,6 @@ partial struct FishSchoolSpawner : ISystem
             state.EntityManager.AddComponent<ScaredTag>(fishSchoolEntity);
             state.EntityManager.SetComponentEnabled<ScaredTag>(fishSchoolEntity, false);
 
-            DynamicBuffer<SchoolFishes> schoolBuffer = ecb.AddBuffer<SchoolFishes>(fishSchoolEntity);
-            schoolBuffer.Capacity = config.FlockSize;
-
             //Re-getting the buffer due to structural changes
             fishPrefabsLookup.Update(ref state);
             fishPrefabsLookup.TryGetBuffer(SystemAPI.GetSingletonEntity<Config>(), out fishPrefabs);
@@ -68,9 +65,6 @@ partial struct FishSchoolSpawner : ISystem
             var fishSchoolData = state.EntityManager.GetComponentData<FishSchoolAttribute>(fishSchoolEntity);
 
             var fishes = state.EntityManager.Instantiate(fishSchoolData.FishPrefab, fishSchoolData.FlockSize, Allocator.TempJob);
-
-            schoolBuffer.EnsureCapacity(fishes.Length);
-            schoolBuffer.AddRange(fishes.Reinterpret<SchoolFishes>());
 
             linkedEntityGroupLookup.Update(ref state);
 

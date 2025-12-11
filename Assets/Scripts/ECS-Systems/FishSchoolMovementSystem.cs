@@ -8,12 +8,8 @@ using Unity.Transforms;
 [CreateAfter(typeof(FishSchoolSpawner))]
 partial struct FishSchoolMovementSystem : ISystem
 {
-
-    BufferLookup<SchoolFishes> schoolFishesLookup;
     EntityQuery query_fish;
     ComponentLookup<LocalTransform> neighbourLocalTransformLookup;
-
-    
 
     [BurstCompile]
     public void OnCreate(ref SystemState state)
@@ -21,7 +17,6 @@ partial struct FishSchoolMovementSystem : ISystem
         state.RequireForUpdate<BeginSimulationEntityCommandBufferSystem.Singleton
         >();
         state.RequireForUpdate<Config>();
-        schoolFishesLookup = state.GetBufferLookup<SchoolFishes>();
         neighbourLocalTransformLookup = state.GetComponentLookup<LocalTransform>(true);
         query_fish = new EntityQueryBuilder(Allocator.Temp).WithAll<FishAttributes>().Build(ref state);
     }
@@ -29,14 +24,12 @@ partial struct FishSchoolMovementSystem : ISystem
     [BurstCompile]
     public void OnUpdate(ref SystemState state)
     {
-        schoolFishesLookup.Update(ref state);
         neighbourLocalTransformLookup.Update(ref state);
         var ecb =
             SystemAPI.GetSingleton<BeginSimulationEntityCommandBufferSystem.Singleton
             >().CreateCommandBuffer(state.WorldUnmanaged);
 
         var config = SystemAPI.GetSingleton<Config>();
-
 
         // should loop through the different school the cohesion etc. methods needs to loop through the fish of the school they get
         foreach (var fishSchoolAttribute in SystemAPI
