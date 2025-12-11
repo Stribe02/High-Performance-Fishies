@@ -77,50 +77,54 @@ partial struct CollisionSystem : ISystem
             // Wait for jobs to complete so we can access the collisionEvents
             sim.FinalJobHandle.Complete();
 
-            CheckCollisionRock(ref state, ecb, sim.CollisionEvents);
-            CheckCollisionFish(ref state, ecb, physicsWorldSingleton, sim.CollisionEvents);
+            CheckCollision(ref state, ecb, sim.CollisionEvents, physicsWorldSingleton);
         }
     }
 
     [BurstCompile]
-    public void CheckCollisionRock(ref SystemState state, EntityCommandBuffer ecb ,CollisionEvents collisionEvents)
+    public void CheckCollision(ref SystemState state, EntityCommandBuffer ecb ,CollisionEvents collisionEvents, PhysicsWorldSingleton physicsWorldSingleton)
     {
         foreach (var collisionEvent in collisionEvents)
         {
-            Entity rockEntity = Entity.Null;
-
-            if (SystemAPI.HasComponent<RockComponent>(collisionEvent.EntityA) &&
-                SystemAPI.HasComponent<WallTag>(collisionEvent.EntityB))
-            {
-                rockEntity = collisionEvent.EntityA;
-            }
-            else if (SystemAPI.HasComponent<RockComponent>(collisionEvent.EntityB) &&
-                     SystemAPI.HasComponent<WallTag>(collisionEvent.EntityA))
-            {
-                rockEntity = collisionEvent.EntityB;
-            }
-
-            if (rockEntity.Equals(Entity.Null)) return;
-            ecb.DestroyEntity(rockEntity);
+            CheckCollisionRock(ref state, ecb, collisionEvent.EntityA, collisionEvent.EntityB);
+            CheckCollisionFish(ref state, physicsWorldSingleton, collisionEvent.EntityA,  collisionEvent.EntityB, collisionEvent);
         }
     }
-    
+
     [BurstCompile]
-    public void CheckCollisionFish(ref SystemState state, EntityCommandBuffer ecb, PhysicsWorldSingleton physicsWorldSingleton ,CollisionEvents collisionEvents)
+    public void CheckCollisionRock(ref SystemState state, EntityCommandBuffer ecb , Entity entityA, Entity entityB)
     {
-        foreach (var collisionEvent in collisionEvents)
+        Entity rockEntity = Entity.Null;
+
+        if (SystemAPI.HasComponent<RockComponent>(entityA) &&
+            SystemAPI.HasComponent<WallTag>(entityB))
         {
+            rockEntity = entityA;
+        }
+        else if (SystemAPI.HasComponent<RockComponent>(entityB) &&
+                 SystemAPI.HasComponent<WallTag>(entityA))
+        {
+            rockEntity = entityB;
+        }
+
+        if (rockEntity.Equals(Entity.Null)) return;
+        ecb.DestroyEntity(rockEntity);
+    }
+
+    [BurstCompile]
+    public void CheckCollisionFish(ref SystemState state, PhysicsWorldSingleton physicsWorldSingleton , Entity entityA, Entity entityB, CollisionEvent collisionEvent)
+    {
             Entity fishEntity = Entity.Null;
 
-            if (SystemAPI.HasComponent<FishAttributes>(collisionEvent.EntityA) &&
-                SystemAPI.HasComponent<WallTag>(collisionEvent.EntityB))
+            if (SystemAPI.HasComponent<FishAttributes>(entityA) &&
+                SystemAPI.HasComponent<WallTag>(entityB))
             {
-                fishEntity = collisionEvent.EntityA;
+                fishEntity = entityA;
             }
-            else if (SystemAPI.HasComponent<RockComponent>(collisionEvent.EntityB) &&
-                     SystemAPI.HasComponent<WallTag>(collisionEvent.EntityA))
+            else if (SystemAPI.HasComponent<RockComponent>(entityB) &&
+                     SystemAPI.HasComponent<WallTag>(entityA))
             {
-                fishEntity = collisionEvent.EntityB;
+                fishEntity = entityB;
             }
 
             if (fishEntity.Equals(Entity.Null)) return;
@@ -137,7 +141,6 @@ partial struct CollisionSystem : ISystem
                 fishSchoolAttribute.ValueRW.PosToMoveAwayFrom = avgContactPointPosition;
                 fishSchoolAttribute.ValueRW.FishHasHitWall = true;
             }
-        }
     }
 
 
@@ -166,7 +169,6 @@ partial struct CollisionSystem : ISystem
             else rockEntity = Entity.Null;
 
             if (rockEntity.Equals(Entity.Null)) return;
-            
             ecb.DestroyEntity(rockEntity);
         }
     }
